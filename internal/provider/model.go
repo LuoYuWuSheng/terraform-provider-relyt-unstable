@@ -39,7 +39,7 @@ type DwsuModel struct {
 	Variant    types.String `tfsdk:"variant"`
 	Edition    types.String `tfsdk:"edition"`
 	Domain     types.String `tfsdk:"domain"`
-	DefaultDps DefaultDps   `tfsdk:"default_dps"`
+	DefaultDps *DefaultDps  `tfsdk:"default_dps"`
 	//Endpoints  []Endpoints  `tfsdk:"endpoints"`
 	Endpoints types.List `tfsdk:"endpoints"`
 	//LastUpdated types.Int64  `tfsdk:"last_updated"`
