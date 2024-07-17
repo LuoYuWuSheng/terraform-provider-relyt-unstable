@@ -47,7 +47,7 @@ func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"domain":    schema.StringAttribute{Required: true, Description: "The domain name of the service unit."},
 			"variant":   schema.StringAttribute{Computed: true, Default: stringdefault.StaticString("basic")},
 			"edition":   schema.StringAttribute{Computed: true, Description: "The ID of the edition.", Default: stringdefault.StaticString("standard")},
-			"dwsu_type": schema.StringAttribute{Required: true, Description: ""},
+			"dwsu_type": schema.StringAttribute{Optional: true, Description: ""},
 			"alias":     schema.StringAttribute{Optional: true, Description: "The alias of the service unit."},
 			//"last_updated": schema.Int64Attribute{Computed: true},
 			//"status":       schema.StringAttribute{Computed: true},
