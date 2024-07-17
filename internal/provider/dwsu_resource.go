@@ -1,0 +1,334 @@
+package provider
+
+import (
+	"context"
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"terraform-provider-relyt/internal/provider/client"
+)
+
+// Ensure the implementation satisfies the expected interfaces.
+var (
+	_ resource.Resource                = &dwsuResource{}
+	_ resource.ResourceWithConfigure   = &dwsuResource{}
+	_ resource.ResourceWithImportState = &dwsuResource{}
+)
+
+// NewOrderResource is a helper function to simplify the provider implementation.
+func NewDwsuResource() resource.Resource {
+	return &dwsuResource{}
+}
+
+// orderResource is the resource implementation.
+type dwsuResource struct {
+	client *client.RelytClient
+}
+
+// Metadata returns the resource type name.
+func (r *dwsuResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_dwsu"
+}
+
+// Schema defines the schema for the resource.
+func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Version: 0,
+		Attributes: map[string]schema.Attribute{
+			"id":        schema.StringAttribute{Computed: true, Description: "The ID of the service unit."},
+			"cloud":     schema.StringAttribute{Required: true, Description: "The ID of the cloud provider."},
+			"region":    schema.StringAttribute{Required: true, Description: "The ID of the region."},
+			"domain":    schema.StringAttribute{Required: true, Description: "The domain name of the service unit."},
+			"variant":   schema.StringAttribute{Computed: true, Default: stringdefault.StaticString("basic")},
+			"edition":   schema.StringAttribute{Computed: true, Description: "The ID of the edition.", Default: stringdefault.StaticString("standard")},
+			"dwsu_type": schema.StringAttribute{Required: true, Description: ""},
+			"alias":     schema.StringAttribute{Optional: true, Description: "The alias of the service unit."},
+			//"last_updated": schema.Int64Attribute{Computed: true},
+			//"status":       schema.StringAttribute{Computed: true},
+			"default_dps": schema.SingleNestedAttribute{
+				Required: true,
+				Attributes: map[string]schema.Attribute{
+					"name":        schema.StringAttribute{Required: true, Description: "The name of the DPS cluster."},
+					"description": schema.StringAttribute{Optional: true, Description: "The description of the DPS cluster."},
+					"engine":      schema.StringAttribute{Required: true, Description: "The type of the DPS cluster. hybrid, extreme, vector"},
+					"size":        schema.StringAttribute{Required: true, Description: "The name of the DPS cluster specification."},
+				},
+			},
+			"endpoints": schema.ListNestedAttribute{
+				Computed:    true,
+				Description: "endpoints of dwsu",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"extensions": schema.MapAttribute{Computed: true,
+							ElementType: types.StringType,
+							Description: "extension info of endpoint"},
+						"host":     schema.StringAttribute{Computed: true, Description: "The name of the host used by the endpoint."},
+						"id":       schema.StringAttribute{Computed: true, Description: "The ID of the endpoint."},
+						"open":     schema.BoolAttribute{Computed: true},
+						"port":     schema.Int64Attribute{Computed: true, Description: "The port number used by the endpoint."},
+						"protocol": schema.StringAttribute{Computed: true, Description: "The protocol used by the endpoint. enum: {HTTP, HTTPS, JDBC}"},
+						"type":     schema.StringAttribute{Computed: true, Description: "The type of the endpoint. enum: {openapi, web_console, database}"},
+						"uri":      schema.StringAttribute{Computed: true, Description: "The URI of the endpoint."},
+					},
+				},
+			},
+		},
+	}
+}
+
+// Create a new resource.
+func (r *dwsuResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Retrieve values from dwsuModel
+	var dwsuModel DwsuModel
+	diags := req.Plan.Get(ctx, &dwsuModel)
+	resp.Diagnostics.Append(diags...)
+	//dwsuModel.Variant = types.StringValue("basic")
+	//dwsuModel.Edition = types.StringValue("standard")
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	relytDwsu := client.DwsuModel{
+		DefaultDps: &client.DpsMode{
+			Description: dwsuModel.DefaultDps.Description.ValueString(),
+			Engine:      dwsuModel.DefaultDps.Engine.ValueString(),
+			Name:        dwsuModel.DefaultDps.Name.ValueString(),
+			Spec: &client.Spec{
+				Name: dwsuModel.DefaultDps.Size.ValueString(),
+			},
+		},
+		Domain:  dwsuModel.Domain.ValueString(),
+		Alias:   dwsuModel.Alias.ValueString(),
+		Variant: &client.Variant{ID: dwsuModel.Variant.ValueString()},
+		Edition: &client.Edition{ID: dwsuModel.Edition.ValueString()},
+		Region: &client.Region{
+			Cloud: &client.Cloud{
+				ID: dwsuModel.Cloud.ValueString(),
+			},
+			ID: dwsuModel.Region.ValueString(),
+		},
+	}
+
+	if dwsuModel.ID.IsUnknown() {
+		//可重入
+		// Create dwsu
+		createResult, err := r.client.CeateDwsu(ctx, relytDwsu)
+		if err != nil || createResult.Code != 200 {
+			resp.Diagnostics.AddError(
+				"Error creating dwsu",
+				"Could not create dwsu, unexpected error: "+err.Error(),
+			)
+			return
+		}
+		if createResult.Data == nil {
+			resp.Diagnostics.AddError(
+				"Error creating dwsu",
+				"Could not get dwsu id, after create!",
+			)
+			return
+		}
+		//一旦拿到ID立刻保存
+		dwsuModel.ID = types.StringValue(*createResult.Data)
+		resp.State.Set(ctx, dwsuModel)
+	}
+	queryDwsuModel, err := r.client.TimeOutTask(r.client.CheckTimeOut, r.client.CheckInterval, func() (any, error) {
+		dwsu, err2 := r.client.GetDwsu(ctx, dwsuModel.ID.ValueString())
+		if err2 != nil {
+			//这里判断是否要充实
+			return dwsu, err2
+		}
+		if dwsu != nil && dwsu.Status == client.DPS_STATUS_READY {
+			return dwsu, nil
+		}
+		return dwsu, fmt.Errorf("dwsu is not Ready")
+	})
+	if err != nil {
+		tflog.Error(ctx, "error wait dwsu ready"+err.Error())
+		resp.Diagnostics.AddError("create failed!", "error wait dwsu ready!"+err.Error())
+		return
+		//fmt.Println(fmt.Sprintf("drop dwsu%s", err.Error()))
+	}
+	relytQueryModel := queryDwsuModel.(*client.DwsuModel)
+	r.mapRelytModelToTerraform(ctx, &resp.Diagnostics, &dwsuModel, relytQueryModel)
+	tflog.Info(ctx, "bizId:"+relytQueryModel.ID)
+	//dwsuModel.LastUpdated = types.Int64Value(time.Now().UnixMilli())
+	//dwsuModel.Status = types.StringValue(relytQueryModel.Status)
+	// Set state to fully populated data
+	diags = resp.State.Set(ctx, dwsuModel)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Info(ctx, "create dwsu success: "+relytQueryModel.ID)
+}
+
+// Read resource information.
+func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// Get current state
+	//这里只能改compute的值，改Required或option额值则会触发update
+	var state DwsuModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	relytQueryModel, err := r.client.GetDwsu(ctx, state.ID.ValueString())
+	if err != nil {
+		tflog.Error(ctx, "error read dwsu"+err.Error())
+		return
+	}
+	//state.Status = types.StringValue(dwsu.Status)
+	// Set refreshed state
+	r.mapRelytModelToTerraform(ctx, &resp.Diagnostics, &state, relytQueryModel)
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	tflog.Info(ctx, "read dwsu succ : "+state.ID.ValueString())
+}
+
+// Update updates the resource and sets the updated Terraform state on success.
+func (r *dwsuResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	resp.Diagnostics.AddError("not support", "update dwsu not supported")
+	return
+}
+
+// Delete deletes the resource and removes the Terraform state on success.
+func (r *dwsuResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// Retrieve values from state
+	var state DwsuModel
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if state.ID.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("id"),
+			"dwsu id is unknown ",
+			"Can't drop dwsu with unknown id! Please check your status! ")
+		return
+	}
+
+	dwsu, err := r.client.GetDwsu(ctx, state.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to get dwsu meta!", "Can't get dwsu info before drop it! err: "+err.Error())
+		return
+	}
+	if dwsu == nil {
+		//保证幂等，先读一次，如果读不到就认为删除成功了
+		tflog.Info(ctx, "get dwsu meta is null! treated as success")
+		return
+	}
+
+	// Delete existing dwsu
+	err = r.client.DropDwsu(ctx, state.ID.ValueString())
+	if err != nil {
+		//要不要加error
+		resp.Diagnostics.AddWarning(
+			"Error Deleting dwsu",
+			"Could not delete dwsu, unexpected error: "+err.Error(),
+		)
+		//return
+	}
+	//等待删除完成
+	_, err = r.client.TimeOutTask(r.client.CheckTimeOut, r.client.CheckInterval, func() (any, error) {
+		dwsu, err2 := r.client.GetDwsu(ctx, state.ID.ValueString())
+		if err2 != nil || dwsu == nil {
+			//这里判断是否要充实
+			return dwsu, err2
+		}
+		if dwsu == nil || dwsu.Status == client.DPS_STATUS_DROPPED {
+			return dwsu, nil
+		}
+		return dwsu, fmt.Errorf("wait delete dwsu timeout! ")
+	})
+	if err != nil {
+		tflog.Error(ctx, "error wait dwsu delete "+err.Error())
+		resp.Diagnostics.AddError(
+			"Error Deleting Dwsu ",
+			"Could not delete dwsu, unexpected error: "+err.Error(),
+		)
+	}
+	return
+}
+
+// Configure adds the provider configured client to the resource.
+func (r *dwsuResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Add a nil check when handling ProviderData because Terraform
+	// sets that data after it calls the ConfigureProvider RPC.
+	if req.ProviderData == nil {
+		return
+	}
+
+	relytClient, ok := req.ProviderData.(*client.RelytClient)
+
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *RelytClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	r.client = relytClient
+}
+
+func (r *dwsuResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Retrieve import ID and save to id attribute
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics *diag.Diagnostics, tfModel *DwsuModel, relytDwsuModel *client.DwsuModel) {
+	if relytDwsuModel != nil && tfModel != nil {
+		if len(relytDwsuModel.Endpoints) > 0 {
+			var tfEndPoints []Endpoints
+			for _, endpoint := range relytDwsuModel.Endpoints {
+				tfEndpoint := Endpoints{
+					//Extensions: types.MapValue(types.StringType),
+					Host:     types.StringValue(endpoint.Host),
+					ID:       types.StringValue(endpoint.ID),
+					Open:     types.BoolValue(endpoint.Open),
+					Port:     types.Int32Value(endpoint.Port),
+					Protocol: types.StringValue(endpoint.Protocol),
+					Type:     types.StringValue(endpoint.Type),
+					URI:      types.StringValue(endpoint.URI),
+				}
+				if endpoint.Extensions != nil {
+					//tfMap := make(map[string]attr.Value, len(*endpoint.Extensions))
+					//for key, v := range *endpoint.Extensions {
+					//	tfMap[key] = types.StringValue(v)
+					//}
+					//tfEndpoint.Extensions.ElementsAs(ctx, &tfMap, false)
+				}
+				mapValue, diage := types.MapValueFrom(ctx, types.StringType, endpoint.Extensions)
+				diagnostics.Append(diage...)
+				tfEndpoint.Extensions = mapValue
+				tfEndPoints = append(tfEndPoints, tfEndpoint)
+				//tfModel.Endpoints = append(tfModel.Endpoints, tfEndpoint)
+			}
+			endpointsTFType := types.ObjectType{
+				AttrTypes: map[string]attr.Type{
+					"extensions": types.MapType{
+						ElemType: types.StringType,
+					},
+					"host":     types.StringType,
+					"id":       types.StringType,
+					"open":     types.BoolType,
+					"port":     types.Int32Type,
+					"protocol": types.StringType,
+					"type":     types.StringType,
+					"uri":      types.StringType,
+				},
+			}
+			from, d := types.ListValueFrom(ctx, endpointsTFType, tfEndPoints)
+			diagnostics.Append(d...)
+			tfModel.Endpoints = from
+		}
+	}
+}
