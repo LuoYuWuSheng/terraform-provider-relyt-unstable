@@ -69,7 +69,7 @@ func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 							Description: "extension info of endpoint"},
 						"host":     schema.StringAttribute{Computed: true, Description: "The name of the host used by the endpoint."},
 						"id":       schema.StringAttribute{Computed: true, Description: "The ID of the endpoint."},
-						"open":     schema.BoolAttribute{Computed: true},
+						"open":     schema.BoolAttribute{Computed: true, Description: "Public network access"},
 						"port":     schema.Int64Attribute{Computed: true, Description: "The port number used by the endpoint."},
 						"protocol": schema.StringAttribute{Computed: true, Description: "The protocol used by the endpoint. enum: {HTTP, HTTPS, JDBC}"},
 						"type":     schema.StringAttribute{Computed: true, Description: "The type of the endpoint. enum: {openapi, web_console, database}"},

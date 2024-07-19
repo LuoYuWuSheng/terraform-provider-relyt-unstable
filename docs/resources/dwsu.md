@@ -70,7 +70,7 @@ Read-Only:
 - `extensions` (Map of String) extension info of endpoint
 - `host` (String) The name of the host used by the endpoint.
 - `id` (String) The ID of the endpoint.
-- `open` (Boolean)
+- `open` (Boolean) Public network access
 - `port` (Number) The port number used by the endpoint.
 - `protocol` (String) The protocol used by the endpoint. enum: {HTTP, HTTPS, JDBC}
 - `type` (String) The type of the endpoint. enum: {openapi, web_console, database}
