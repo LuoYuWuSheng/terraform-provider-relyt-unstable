@@ -14,7 +14,7 @@ description: |-
 
 ```terraform
 resource "relyt_dwuser" "user1" {
-  dwsu_id                                  = "dwsu-id-from-an-duws-resource"
+  dwsu_id                                  = "dwsu-id-from-an-dwsu-resource"
   account_name                             = "UniqueAccountName"
   account_password                         = "daf#$dgdfe&Abce%64"
   datalake_aws_lakeformation_role_arn      = "role arn arn=//xxxx"
@@ -34,9 +34,9 @@ resource "relyt_dwuser" "user1" {
 
 ### Optional
 
-- `async_query_result_location_aws_role_arn` (String)
-- `async_query_result_location_prefix` (String)
-- `datalake_aws_lakeformation_role_arn` (String)
+- `async_query_result_location_aws_role_arn` (String) The ARN of the role to access the output location, optional.
+- `async_query_result_location_prefix` (String) The prefix of the path to the S3 output location.
+- `datalake_aws_lakeformation_role_arn` (String) The ARN of the cross-account IAM role, optional.
 
 ### Read-Only
 

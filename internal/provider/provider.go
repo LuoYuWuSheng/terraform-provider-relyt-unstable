@@ -79,7 +79,7 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 				Description: " Your Console Auth Key! Can be set through env 'RELYT_AUTH_KEY'",
 			},
 			"role": schema.StringAttribute{
-				Optional:    true,
+				Required:    true,
 				Sensitive:   true,
 				Description: "your role",
 			},

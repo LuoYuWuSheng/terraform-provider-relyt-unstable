@@ -41,14 +41,13 @@ func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 	resp.Schema = schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"id":        schema.StringAttribute{Computed: true, Description: "The ID of the service unit."},
-			"cloud":     schema.StringAttribute{Required: true, Description: "The ID of the cloud provider."},
-			"region":    schema.StringAttribute{Required: true, Description: "The ID of the region."},
-			"domain":    schema.StringAttribute{Required: true, Description: "The domain name of the service unit."},
-			"variant":   schema.StringAttribute{Computed: true, Default: stringdefault.StaticString("basic")},
-			"edition":   schema.StringAttribute{Computed: true, Description: "The ID of the edition.", Default: stringdefault.StaticString("standard")},
-			"dwsu_type": schema.StringAttribute{Optional: true, Description: ""},
-			"alias":     schema.StringAttribute{Optional: true, Description: "The alias of the service unit."},
+			"id":      schema.StringAttribute{Computed: true, Description: "The ID of the service unit."},
+			"cloud":   schema.StringAttribute{Required: true, Description: "The ID of the cloud provider."},
+			"region":  schema.StringAttribute{Required: true, Description: "The ID of the region."},
+			"domain":  schema.StringAttribute{Required: true, Description: "The domain name of the service unit."},
+			"variant": schema.StringAttribute{Computed: true, Description: "The variables.", Default: stringdefault.StaticString("basic")},
+			"edition": schema.StringAttribute{Computed: true, Description: "The ID of the edition.", Default: stringdefault.StaticString("standard")},
+			"alias":   schema.StringAttribute{Optional: true, Description: "The alias of the service unit."},
 			//"last_updated": schema.Int64Attribute{Computed: true},
 			//"status":       schema.StringAttribute{Computed: true},
 			"default_dps": schema.SingleNestedAttribute{

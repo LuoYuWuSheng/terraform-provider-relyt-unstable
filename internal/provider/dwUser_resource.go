@@ -43,9 +43,9 @@ func (r *dwUserResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"id":                                  schema.StringAttribute{Computed: true, Description: "The ID of the DW user."},
 			"account_name":                        schema.StringAttribute{Required: true, Description: "The name of the DW user, which is unique in the instance. The name is the email address."},
 			"account_password":                    schema.StringAttribute{Required: true, Description: "initPassword"},
-			"datalake_aws_lakeformation_role_arn": schema.StringAttribute{Optional: true, Computed: true, Description: ""},
-			"async_query_result_location_prefix":  schema.StringAttribute{Optional: true, Computed: true},
-			"async_query_result_location_aws_role_arn": schema.StringAttribute{Optional: true, Computed: true},
+			"datalake_aws_lakeformation_role_arn": schema.StringAttribute{Optional: true, Computed: true, Description: "The ARN of the cross-account IAM role, optional."},
+			"async_query_result_location_prefix":  schema.StringAttribute{Optional: true, Computed: true, Description: "The prefix of the path to the S3 output location."},
+			"async_query_result_location_aws_role_arn": schema.StringAttribute{Optional: true, Computed: true, Description: "The ARN of the role to access the output location, optional."},
 		},
 	}
 }

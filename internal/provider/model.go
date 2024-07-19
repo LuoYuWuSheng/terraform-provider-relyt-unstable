@@ -35,7 +35,6 @@ type DwsuModel struct {
 	Alias      types.String `tfsdk:"alias"`
 	Cloud      types.String `tfsdk:"cloud"`
 	Region     types.String `tfsdk:"region"`
-	DwsuType   types.String `tfsdk:"dwsu_type"`
 	Variant    types.String `tfsdk:"variant"`
 	Edition    types.String `tfsdk:"edition"`
 	Domain     types.String `tfsdk:"domain"`

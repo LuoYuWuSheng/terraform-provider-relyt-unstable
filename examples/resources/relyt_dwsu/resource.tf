@@ -7,7 +7,7 @@ resource "relyt_dwsu" "dwsu" {
   alias  = "your-alias-of-dwsu"
   default_dps = {
     name        = "hybrid"
-    description = "An Dwsu Example"
+    description = "An DWSU Example"
     engine      = "hybrid"
     size        = "S"
   }

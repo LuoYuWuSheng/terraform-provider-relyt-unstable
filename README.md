@@ -1,107 +1,71 @@
 # Terraform Provider Relyt 
 
 ```
-
-
+    terraform {
+      required_providers {
+        relyt = {
+          source  = "relytcloud/relyt"
+          version = "0.0.2"
+        }  
+      }
+    }
+    
+    provider "relyt" {
+      auth_key = "<api_key>" # Copy the API key you obtained from the previous step.
+      role     = "SYSTEMADIN" # The system role for the Relyt cloud account to create, fixed to SYSTEMADMIN.
+    }
+    
+    
+    locals {
+      cloud_id = {
+        id = "aws"
+      }
+      region_id = {
+        id = "<region_id>" # Set the region in which the DW service unit will be created.
+      }
+      BASIC = {
+        id = "basic"
+      }
+    }
+    
+    # Create a DW service unit and its default Hybrid DPS cluster.
+      resource "relyt_dwsu" "dwsu_example" {
+      cloud     = local.cloud_id.id
+      region    = local.region_id.id
+      domain    = "hdps-example-tf" # The subdomain, customizable.
+      alias     = "hdps-test" # The alias of the DW service unit.
+      default_dps = {
+        name        = "hdps-test" # The name for the Hybrid DPS cluster, customizable.
+        description = "The Hybrid DPS cluster" # A short description for the Hybrid DPS cluster, customizable and optional.
+        engine      = "hybrid" # The type of the DPS cluster, fixed to hybrid.
+        size        = "s" # The size of the Hybrid DPS cluster, customizable.
+    }
+    }
+    
+    # Create an Extreme DPS cluster.
+    resource "relyt_dps" "edps_example" {
+      dwsu_id     = relyt_dwsu.edps_example.id
+      name        = "edps1" # Set the name for the Extreme DPS cluster.
+      description = "An Extreme DPS cluster" # A short description for the Extreme DPS cluster, customizable.
+      engine      = "extreme" # The type of the DPS cluster, fixed to extreme.
+      size        = "xs" # The size of the Extreme DPS cluster.
+    }
+    
+    # Create a DW user. You can repeat this code block to create multiple DW users.
+    resource "relyt_dwuser" "user1" {
+      dwsu_id          = relyt_dwsu.dwsu_example.id
+      account_name     = "user1" # Name the DW user to create.
+      account_password = "Qwer123!" # The password for the DW user, which must be 8 to 32 characters in length and contain at least one uppercase letter, one lowercase letter, one digit, and one special character.
+    
+    
+    # Optional parameters
+      datalake_aws_lakeformation_role_arn = "anotherRole2" # The ARN of the cross-account IAM role, optional.
+      async_query_result_location_prefix  = "simple"       # The prefix of the path to the S3 output location.
+      async_query_result_location_aws_role_arn = "anotherSimple" # The ARN of the role to access the output location, optional.
+    }
+    
+    
+    data "relyt_dwsu_service_account" "tes" {
+      dwsu_id = relyt_dwsu.dwsu_example.id
+    }
 ```
-
-[//]: # ()
-[//]: # (_This template repository is built on the [Terraform Plugin Framework]&#40;https://github.com/hashicorp/terraform-plugin-framework&#41;. The template repository built on the [Terraform Plugin SDK]&#40;https://github.com/hashicorp/terraform-plugin-sdk&#41; can be found at [terraform-provider-scaffolding]&#40;https://github.com/hashicorp/terraform-provider-scaffolding&#41;. See [Which SDK Should I Use?]&#40;https://developer.hashicorp.com/terraform/plugin/framework-benefits&#41; in the Terraform documentation for additional information._)
-
-[//]: # ()
-[//]: # (This repository is a *template* for a [Terraform]&#40;https://www.terraform.io&#41; provider. It is intended as a starting point for creating Terraform providers, containing:)
-
-[//]: # ()
-[//]: # (- A resource and a data source &#40;`internal/provider/`&#41;,)
-
-[//]: # (- Examples &#40;`examples/`&#41; and generated documentation &#40;`docs/`&#41;,)
-
-[//]: # (- Miscellaneous meta files.)
-
-[//]: # ()
-[//]: # (These files contain boilerplate code that you will need to edit to create your own Terraform provider. Tutorials for creating Terraform providers can be found on the [HashiCorp Developer]&#40;https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework&#41; platform. _Terraform Plugin Framework specific guides are titled accordingly._)
-
-[//]: # ()
-[//]: # (Please see the [GitHub template repository documentation]&#40;https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template&#41; for how to create a new repository from this template on GitHub.)
-
-[//]: # ()
-[//]: # (Once you've written your provider, you'll want to [publish it on the Terraform Registry]&#40;https://developer.hashicorp.com/terraform/registry/providers/publishing&#41; so that others can use it.)
-
-[//]: # ()
-[//]: # (## Requirements)
-
-[//]: # ()
-[//]: # (- [Terraform]&#40;https://developer.hashicorp.com/terraform/downloads&#41; >= 1.0)
-
-[//]: # (- [Go]&#40;https://golang.org/doc/install&#41; >= 1.21)
-
-[//]: # ()
-[//]: # (## Building The Provider)
-
-[//]: # ()
-[//]: # (1. Clone the repository)
-
-[//]: # (1. Enter the repository directory)
-
-[//]: # (1. Build the provider using the Go `install` command:)
-
-[//]: # ()
-[//]: # (```shell)
-
-[//]: # (go install)
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (## Adding Dependencies)
-
-[//]: # ()
-[//]: # (This provider uses [Go modules]&#40;https://github.com/golang/go/wiki/Modules&#41;.)
-
-[//]: # (Please see the Go documentation for the most up to date information about using Go modules.)
-
-[//]: # ()
-[//]: # (To add a new dependency `github.com/author/dependency` to your Terraform provider:)
-
-[//]: # ()
-[//]: # (```shell)
-
-[//]: # (go get github.com/author/dependency)
-
-[//]: # (go mod tidy)
-
-[//]: # (```)
-
-[//]: # ()
-[//]: # (Then commit the changes to `go.mod` and `go.sum`.)
-
-[//]: # ()
-[//]: # (## Using the provider)
-
-[//]: # ()
-[//]: # (Fill this in for each provider)
-
-[//]: # ()
-[//]: # (## Developing the Provider)
-
-[//]: # ()
-[//]: # (If you wish to work on the provider, you'll first need [Go]&#40;http://www.golang.org&#41; installed on your machine &#40;see [Requirements]&#40;#requirements&#41; above&#41;.)
-
-[//]: # ()
-[//]: # (To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.)
-
-[//]: # ()
-[//]: # (To generate or update documentation, run `go generate`.)
-
-[//]: # ()
-[//]: # (In order to run the full suite of Acceptance tests, run `make testacc`.)
-
-[//]: # ()
-[//]: # (*Note:* Acceptance tests create real resources, and often cost money to run.)
-
-[//]: # ()
-[//]: # (```shell)
-
-[//]: # (make testacc)
-
-[//]: # (```)

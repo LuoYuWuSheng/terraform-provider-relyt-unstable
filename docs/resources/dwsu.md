@@ -20,7 +20,7 @@ resource "relyt_dwsu" "dwsu" {
   alias  = "your-alias-of-dwsu"
   default_dps = {
     name        = "hybrid"
-    description = "An Dwsu Example"
+    description = "An DWSU Example"
     engine      = "hybrid"
     size        = "S"
   }
@@ -40,14 +40,13 @@ resource "relyt_dwsu" "dwsu" {
 ### Optional
 
 - `alias` (String) The alias of the service unit.
-- `dwsu_type` (String)
 
 ### Read-Only
 
 - `edition` (String) The ID of the edition.
 - `endpoints` (Attributes List) endpoints of dwsu (see [below for nested schema](#nestedatt--endpoints))
 - `id` (String) The ID of the service unit.
-- `variant` (String)
+- `variant` (String) The variables.
 
 <a id="nestedatt--default_dps"></a>
 ### Nested Schema for `default_dps`
