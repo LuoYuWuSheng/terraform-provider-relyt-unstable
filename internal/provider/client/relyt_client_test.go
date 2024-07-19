@@ -88,7 +88,7 @@ func TestListDwsu(t *testing.T) {
 }
 
 func TestDeleteDwsu(t *testing.T) {
-	err := client.DropDwsu(ctx, "4679216502528-abc-not-exist")
+	err := client.DropDwsu(ctx, "4679498681344")
 	if err != nil {
 		fmt.Println(fmt.Sprintf("drop dwsu%s", err.Error()))
 	}
@@ -110,6 +110,17 @@ func TestPath(t *testing.T) {
 	var st []byte
 	sprintf := fmt.Sprintf("abc:%s %t ", string(st), st == nil)
 	fmt.Println(sprintf)
+}
+
+func TestGetBoto3(t *testing.T) {
+	meta, err := client.GetOpenApiMeta(ctx, "aws", "ap-east-1")
+	account, err := client.GetBoto3AccessInfo(ctx, meta.URI, "4953896353792", "zhanlu3@zbyte-inc.com")
+	if err != nil {
+		println("get boto3: " + err.Error())
+		return
+	}
+	marshal, err := json.Marshal(account)
+	fmt.Println("get result: " + string(marshal))
 }
 
 func TestCreateAccount(t *testing.T) {
@@ -180,7 +191,7 @@ func TestConfigAsync(t *testing.T) {
 }
 
 func TestGetAsyncConfig(t *testing.T) {
-	lakeinfo, err := client.GetAsyncAccountConfig(ctx, client.RegionApi, "4679483685888", "demo8")
+	lakeinfo, err := client.GetAsyncAccountConfig(ctx, client.RegionApi, "4679483645184", "demo10")
 	if err != nil {
 		println("delete account: " + err.Error())
 		return

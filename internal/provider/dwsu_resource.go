@@ -195,7 +195,7 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *dwsuResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError("not support", "update dwsu not supported")
+	resp.Diagnostics.AddError("not support", "update dwsu not supported! please rollback your change!")
 	return
 }
 

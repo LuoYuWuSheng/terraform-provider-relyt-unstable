@@ -17,9 +17,14 @@ terraform {
   required_providers {
     relyt = {
       source  = "LuoYuWuSheng/relyt"
-      version = "0.0.2"
+      version = ">= 0.0.13"
     }
   }
+}
+
+provider "relyt" {
+  auth_key = "9a3727e5b9c0ddabaGbll2HVLVKLLY1AyjOilAqeyPOBAb74A7VlJRAdTi0bJWJd3"
+  role     = "SYSTEMADMIN"
 }
 ```
 
@@ -29,7 +34,7 @@ terraform {
 ### Optional
 
 - `api_host` (String) target api address
-- `auth_key` (String, Sensitive) your api auth, Can set by env 'RELYT_AUTH_KEY'
-- `resource_check_interval` (Number) Interval second used in wait for cycle check!Default is 5
-- `resource_check_timeout` (Number) Timeout second used in wait for create and delete dwsu or dps! Default is 600
+- `auth_key` (String, Sensitive) Your Console Auth Key! Can be set through env 'RELYT_AUTH_KEY'
+- `resource_check_interval` (Number) Interval second used in wait for cycle check! Defaults 5
+- `resource_check_timeout` (Number) Timeout second used in wait for create and delete dwsu or dps! Defaults 600
 - `role` (String, Sensitive) your role

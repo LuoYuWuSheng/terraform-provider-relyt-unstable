@@ -241,6 +241,16 @@ func (p *RelytClient) DeleteLakeFormationConfig(ctx context.Context, regionUri, 
 	return &resp, nil
 }
 
+func (p *RelytClient) GetBoto3AccessInfo(ctx context.Context, regionUri, dwsuId, userId string) ([]*Boto3AccessInfo, error) {
+	path := fmt.Sprintf("/dwsu/%s/user/%s/ak", dwsuId, url.PathEscape(userId))
+	resp := CommonRelytResponse[[]*Boto3AccessInfo]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "GET", &resp, nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return *resp.Data, nil
+}
+
 func (p *RelytClient) GetOpenApiMeta(ctx context.Context, cloud, region string) (*OpenApiMetaInfo, error) {
 	path := fmt.Sprintf("/infra/%s/%s/endpoint", url.PathEscape(cloud), url.PathEscape(region))
 	resp := CommonRelytResponse[[]*OpenApiMetaInfo]{}

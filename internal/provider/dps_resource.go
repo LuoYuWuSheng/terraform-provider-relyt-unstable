@@ -168,7 +168,7 @@ func (r *dpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *dpsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError("not support", "update dps not supported")
+	resp.Diagnostics.AddError("not support", "update dps not supported! please rollback your change!")
 	return
 }
 

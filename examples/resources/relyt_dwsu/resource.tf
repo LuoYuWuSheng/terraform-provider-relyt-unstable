@@ -1,14 +1,13 @@
 
 
 resource "relyt_dwsu" "dwsu" {
-  cloud     = "ksc"
-  region    = "beijing-cicd"
-  dwsu_type = "basic"
-  domain    = "qing-deng-tf"
-  alias     = "qingdeng-test"
+  cloud  = "aws"
+  region = "ap-east-1"
+  domain = "your-subdomain-prefix"
+  alias  = "your-alias-of-dwsu"
   default_dps = {
     name        = "hybrid"
-    description = "qingdeng-test"
+    description = "An Dwsu Example"
     engine      = "hybrid"
     size        = "S"
   }

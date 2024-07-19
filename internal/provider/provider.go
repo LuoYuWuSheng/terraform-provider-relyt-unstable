@@ -76,7 +76,7 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 			"auth_key": schema.StringAttribute{
 				Optional:    true,
 				Sensitive:   true,
-				Description: "your api auth, Can set by env 'RELYT_AUTH_KEY'",
+				Description: " Your Console Auth Key! Can be set through env 'RELYT_AUTH_KEY'",
 			},
 			"role": schema.StringAttribute{
 				Optional:    true,
@@ -85,11 +85,11 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 			},
 			"resource_check_timeout": schema.Int64Attribute{
 				Optional:    true,
-				Description: "Timeout second used in wait for create and delete dwsu or dps! Default is 600",
+				Description: "Timeout second used in wait for create and delete dwsu or dps! Defaults 600",
 			},
 			"resource_check_interval": schema.Int64Attribute{
 				Optional:    true,
-				Description: "Interval second used in wait for cycle check!Default is 5",
+				Description: "Interval second used in wait for cycle check! Defaults 5",
 			},
 		},
 	}
@@ -217,6 +217,7 @@ func (p *RelytProvider) DataSources(ctx context.Context) []func() datasource.Dat
 	tflog.Info(ctx, "===== datasource get ")
 	return []func() datasource.DataSource{
 		NewServiceAccountDataSource,
+		NewBoto3DataSource,
 	}
 }
 

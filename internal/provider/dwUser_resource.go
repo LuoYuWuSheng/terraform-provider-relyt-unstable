@@ -78,7 +78,7 @@ func (r *dwUserResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 	dwUserModel.ID = types.StringValue(relytAccount.Name)
-	r.handleAccountConfig(ctx, dwUserModel, regionUri, &resp.Diagnostics)
+	r.handleAccountConfig(ctx, &dwUserModel, regionUri, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		err := r.client.DropAccount(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
 		if err != nil {
@@ -87,6 +87,10 @@ func (r *dwUserResource) Create(ctx context.Context, req resource.CreateRequest,
 				"Could not rollback dwuser! please clear it with destroy or manual! userId: "+dwUserModel.ID.ValueString()+""+err.Error(),
 			)
 		}
+	}
+	if resp.Diagnostics.HasError() {
+		//如果有异常，dwuser不要写状态
+		return
 	}
 	diags = resp.State.Set(ctx, dwUserModel)
 	resp.Diagnostics.Append(diags...)
@@ -151,24 +155,40 @@ func (r *dwUserResource) Read(ctx context.Context, req resource.ReadRequest, res
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *dwUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	//resp.Diagnostics.AddError("not support", "update account not supported")
-	var state DWUserModel
-	diags := req.Plan.Get(ctx, &state)
+	var plan DWUserModel
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	state.ID = state.AccountName
-	meta := RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	// read old status
+	var stat DWUserModel
+	req.State.Get(ctx, &stat)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if stat.AccountName.ValueString() != plan.AccountName.ValueString() {
+		resp.Diagnostics.AddError("not support", "can't update account name!")
+	}
+	if stat.AccountPassword.ValueString() != plan.AccountPassword.ValueString() {
+		resp.Diagnostics.AddError("not support", "can't update init password!")
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan.ID = plan.AccountName
+	meta := RouteRegionUri(ctx, plan.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	regionUri := meta.URI
-	tflog.Info(ctx, "accountId:"+state.ID.ValueString())
-	r.handleAccountConfig(ctx, state, regionUri, &resp.Diagnostics)
+	tflog.Info(ctx, "accountId:"+plan.ID.ValueString())
+	r.handleAccountConfig(ctx, &plan, regionUri, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	diags = resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -228,15 +248,21 @@ func (r *dwUserResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel DWUserModel,
-	regionUri string, diagnostics *diag.Diagnostics) {
-	dwUserModel.ID = dwUserModel.AccountName
+func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *DWUserModel, regionUri string, diagnostics *diag.Diagnostics) {
+	//dwUserModel.ID = dwUserModel.AccountName
 	asyncResult := client.AsyncResult{
 		AwsIamArn:        dwUserModel.AsyncQueryResultLocationAwsRoleArn.ValueString(),
 		S3LocationPrefix: dwUserModel.AsyncQueryResultLocationPrefix.ValueString(),
 	}
 	lakeFormation := client.LakeFormation{
 		IAMRole: dwUserModel.DatalakeAwsLakeformationRoleArn.ValueString(),
+	}
+	tflog.Info(ctx, fmt.Sprintf("=======uknown %t nil %t", dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsUnknown(), dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsNull()))
+	if dwUserModel.AsyncQueryResultLocationPrefix.IsUnknown() {
+		dwUserModel.AsyncQueryResultLocationPrefix = types.StringNull()
+	}
+	if dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsUnknown() {
+		dwUserModel.AsyncQueryResultLocationAwsRoleArn = types.StringNull()
 	}
 	if !dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsNull() && !dwUserModel.AsyncQueryResultLocationPrefix.IsNull() {
 		_, err := r.client.AsyncAccountConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString(), asyncResult)
@@ -248,6 +274,17 @@ func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel DW
 			//return
 		}
 	} else if dwUserModel.AsyncQueryResultLocationPrefix.IsNull() && dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsNull() {
+		//config, err := r.client.GetAsyncAccountConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
+		//if err != nil {
+		//	diagnostics.AddError(
+		//		"Error read dwuser",
+		//		"Could not read asyncResult before drop dwuser async config, unexpected error: "+err.Error(),
+		//	)
+		//} else {
+		//	if config != nil && config.AwsIamArn != "" {
+		//
+		//	}
+		//}
 		_, err := r.client.DeleteAsyncAccountConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
 		if err != nil {
 			diagnostics.AddError(
@@ -256,12 +293,15 @@ func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel DW
 			)
 			//return
 		}
-	} else {
+	} else if dwUserModel.AsyncQueryResultLocationPrefix.IsNull() || dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsNull() {
 		//只有一个属性的时候报给用户异常
 		diagnostics.AddError(
 			"Error config dwuser",
 			"Could not config dwuser async, arn and prefix should be set together",
 		)
+	}
+	if dwUserModel.DatalakeAwsLakeformationRoleArn.IsUnknown() {
+		dwUserModel.DatalakeAwsLakeformationRoleArn = types.StringNull()
 	}
 	if !dwUserModel.DatalakeAwsLakeformationRoleArn.IsNull() {
 		_, err := r.client.LakeFormationConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString(), lakeFormation)
@@ -272,7 +312,7 @@ func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel DW
 			)
 			//return
 		}
-	} else {
+	} else if dwUserModel.DatalakeAwsLakeformationRoleArn.IsNull() {
 		_, err := r.client.DeleteLakeFormationConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
 		if err != nil {
 			diagnostics.AddError(

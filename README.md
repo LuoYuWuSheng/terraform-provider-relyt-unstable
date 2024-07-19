@@ -1,7 +1,7 @@
 # Terraform Provider Relyt 
 
 ```
-example：
+
 
 ```
 

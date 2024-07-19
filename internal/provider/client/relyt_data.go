@@ -166,3 +166,9 @@ type ServiceAccount struct {
 	Type        string             `json:"type,omitempty"`
 	AccountInfo *map[string]string `json:"accountInfo,omitempty"`
 }
+
+type Boto3AccessInfo struct {
+	AccessKeyId string `json:"accessKeyId,omitempty"`
+	AccessKey   string `json:"accessKey,omitempty"`
+	SecretKey   string `json:"secretKey,omitempty"`
+}

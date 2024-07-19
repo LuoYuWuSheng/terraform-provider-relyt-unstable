@@ -14,14 +14,13 @@ description: |-
 
 ```terraform
 resource "relyt_dwsu" "dwsu" {
-  cloud     = "ksc"
-  region    = "beijing-cicd"
-  dwsu_type = "basic"
-  domain    = "qing-deng-tf"
-  alias     = "qingdeng-test"
+  cloud  = "aws"
+  region = "ap-east-1"
+  domain = "your-subdomain-prefix"
+  alias  = "your-alias-of-dwsu"
   default_dps = {
     name        = "hybrid"
-    description = "qingdeng-test"
+    description = "An Dwsu Example"
     engine      = "hybrid"
     size        = "S"
   }
@@ -36,12 +35,12 @@ resource "relyt_dwsu" "dwsu" {
 - `cloud` (String) The ID of the cloud provider.
 - `default_dps` (Attributes) (see [below for nested schema](#nestedatt--default_dps))
 - `domain` (String) The domain name of the service unit.
-- `dwsu_type` (String)
 - `region` (String) The ID of the region.
 
 ### Optional
 
 - `alias` (String) The alias of the service unit.
+- `dwsu_type` (String)
 
 ### Read-Only
 
