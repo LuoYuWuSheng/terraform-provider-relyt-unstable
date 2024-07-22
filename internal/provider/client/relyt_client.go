@@ -170,7 +170,7 @@ func (p *RelytClient) DropAccount(ctx context.Context, regionUri string, dwsuId 
 	path := fmt.Sprintf("/dwsu/%s/user/%s", dwsuId, url.PathEscape(userId))
 	resp := CommonRelytResponse[string]{}
 	handler := func(response *CommonRelytResponse[string], respString []byte) (*CommonRelytResponse[string], error) {
-		if response.Code != CODE_SUCCESS && resp.Code != CODE_USER_NOT_FOUND && resp.Code != CODE_ROLE_NOT_EXIST {
+		if response.Code != CODE_SUCCESS && resp.Code != CODE_USER_NOT_FOUND {
 			body := string(respString)
 			tflog.Error(ctx, "error call api! resp code not success! body: "+body)
 			return response, fmt.Errorf(body)
@@ -358,7 +358,7 @@ func doHttpRequest[T any](p *RelytClient, ctx context.Context, host, path, metho
 	}
 	if codeHandler != nil {
 		tflog.Trace(ctx, "use code handle func!")
-		handler, err := codeHandler(respMode, responseString)
+		handler, err := codeHandler(respMode, body)
 		if handler != nil {
 			respMode.Code = handler.Code
 			respMode.Data = handler.Data
