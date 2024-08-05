@@ -62,7 +62,7 @@ func TestCreateDwsu(t *testing.T) {
 			ID: "beijing-cicd",
 		},
 	}
-	dwsu, err := client.CeateDwsu(ctx, request)
+	dwsu, err := client.CreateDwsu(ctx, request)
 	fmt.Println(fmt.Sprintf("create result:%s resp:%s", strconv.FormatBool(err != nil), dwsu.Msg))
 
 }
@@ -95,7 +95,7 @@ func TestDeleteDwsu(t *testing.T) {
 }
 
 func TestDeleteDps(t *testing.T) {
-	err := client.DropEdps(ctx, client.RegionApi, "4679367072512", "4679367072512-1472-abc")
+	err := client.DropDps(ctx, client.RegionApi, "4679367072512", "4679367072512-1472-abc")
 	if err != nil {
 		fmt.Println(fmt.Sprintf("drop dwsu%s", err.Error()))
 	}

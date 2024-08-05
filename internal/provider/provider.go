@@ -17,6 +17,8 @@ import (
 	"os"
 	"strconv"
 	"terraform-provider-relyt/internal/provider/client"
+	relytDS "terraform-provider-relyt/internal/provider/datasource"
+	relytRS "terraform-provider-relyt/internal/provider/resource"
 )
 
 // Ensure RelytProvider satisfies various provider interfaces.
@@ -206,9 +208,9 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 func (p *RelytProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewdwUserResource,
-		NewDpsResource,
-		NewDwsuResource,
+		relytRS.NewdwUserResource,
+		relytRS.NewDpsResource,
+		relytRS.NewDwsuResource,
 		//NewTestResource,
 	}
 }
@@ -216,8 +218,8 @@ func (p *RelytProvider) Resources(ctx context.Context) []func() resource.Resourc
 func (p *RelytProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	tflog.Info(ctx, "===== datasource get ")
 	return []func() datasource.DataSource{
-		NewServiceAccountDataSource,
-		NewBoto3DataSource,
+		relytDS.NewServiceAccountDataSource,
+		relytDS.NewBoto3DataSource,
 	}
 }
 

@@ -46,12 +46,13 @@ type DwsuModel struct {
 }
 
 type DpsModel struct {
-	DwsuId      types.String `tfsdk:"dwsu_id"`
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Engine      types.String `tfsdk:"engine"`
-	Size        types.String `tfsdk:"size"`
+	DwsuId types.String `tfsdk:"dwsu_id"`
+	ID     types.String `tfsdk:"id"`
+	DefaultDps
+	//Name        types.String `tfsdk:"name"`
+	//Description types.String `tfsdk:"description"`
+	//Engine      types.String `tfsdk:"engine"`
+	//Size        types.String `tfsdk:"size"`
 	//LastUpdated types.String `tfsdk:"last_updated"`
 	//Status      types.String `tfsdk:"status"`
 }

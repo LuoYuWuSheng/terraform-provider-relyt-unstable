@@ -1,4 +1,4 @@
-package provider
+package datasource
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	types "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	tfModel "terraform-provider-relyt/internal/provider"
 	"terraform-provider-relyt/internal/provider/client"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -51,13 +52,13 @@ func (d *Boto3DataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 
 // Read refreshes the Terraform state with the latest data.
 func (d *Boto3DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state Boto3AccessInfoModel
+	var state tfModel.Boto3AccessInfoModel
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	meta := RouteRegionUri(ctx, state.DwsuId.ValueString(), d.client, &resp.Diagnostics)
+	meta := tfModel.RouteRegionUri(ctx, state.DwsuId.ValueString(), d.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -68,9 +69,9 @@ func (d *Boto3DataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 	if len(boto3AccessInfo) > 0 {
-		var saList []Boto3AccessInfo
+		var saList []tfModel.Boto3AccessInfo
 		for _, boto3 := range boto3AccessInfo {
-			saList = append(saList, Boto3AccessInfo{
+			saList = append(saList, tfModel.Boto3AccessInfo{
 				AccessKeyId: types.StringValue(boto3.AccessKeyId),
 				AccessKey:   types.StringValue(boto3.AccessKey),
 				SecretKey:   types.StringValue(boto3.SecretKey),

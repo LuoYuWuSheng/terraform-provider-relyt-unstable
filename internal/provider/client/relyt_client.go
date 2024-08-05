@@ -44,7 +44,7 @@ func (p *RelytClient) ListDwsu(ctx context.Context, pageSize, pageNumber int) ([
 	return resp.Data.Records, nil
 }
 
-func (p *RelytClient) CeateDwsu(ctx context.Context, request DwsuModel) (*CommonRelytResponse[string], error) {
+func (p *RelytClient) CreateDwsu(ctx context.Context, request DwsuModel) (*CommonRelytResponse[string], error) {
 	url := "/dwsu"
 	resp := CommonRelytResponse[string]{}
 	err := doHttpRequest(p, ctx, "", url, "POST", &resp, request, nil, nil)
@@ -106,10 +106,19 @@ func (p *RelytClient) ListDps(ctx context.Context, pageSize, pageNumber int, dwS
 	return resp.Data.Records, nil
 }
 
-func (p *RelytClient) CreateEdps(ctx context.Context, regionUri string, dwServiceUnitId string, mode DpsMode) (*CommonRelytResponse[string], error) {
+func (p *RelytClient) CreateDps(ctx context.Context, regionUri string, dwServiceUnitId string, mode DpsMode) (*CommonRelytResponse[string], error) {
 	path := fmt.Sprintf("/dwsu/%s/dps", dwServiceUnitId)
 	resp := CommonRelytResponse[string]{}
 	if err := doHttpRequest(p, ctx, regionUri, path, "POST", &resp, mode, nil, nil); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (p *RelytClient) PatchDps(ctx context.Context, regionUri string, dwServiceUnitId, dpsId string, mode DpsMode) (*CommonRelytResponse[string], error) {
+	path := fmt.Sprintf("/dwsu/%s/dps/%s", dwServiceUnitId, dpsId)
+	resp := CommonRelytResponse[string]{}
+	if err := doHttpRequest(p, ctx, regionUri, path, "PATCH", &resp, mode, nil, nil); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -126,7 +135,7 @@ func (p *RelytClient) GetDps(ctx context.Context, regionUri, dwServiceUnitId, dp
 	return resp.Data, nil
 }
 
-func (p *RelytClient) DropEdps(ctx context.Context, regionUri, dwServiceUnitId, dpsBizId string) error {
+func (p *RelytClient) DropDps(ctx context.Context, regionUri, dwServiceUnitId, dpsBizId string) error {
 	path := fmt.Sprintf("/dwsu/%s/dps/%s", dwServiceUnitId, dpsBizId)
 	resp := CommonRelytResponse[string]{}
 	handler := func(response *CommonRelytResponse[string], respString []byte) (*CommonRelytResponse[string], error) {
@@ -374,36 +383,4 @@ func doHttpRequest[T any](p *RelytClient, ctx context.Context, host, path, metho
 		}
 	}
 	return nil
-}
-
-func (p *RelytClient) TimeOutTask(timeoutSec int64, checkIntervalSec int32, task func() (any, error)) (any, error) {
-	// 设置超时时间
-	timeout := time.Duration(timeoutSec) * time.Second
-	interval := time.Duration(checkIntervalSec) * time.Second
-
-	// 创建带有超时的上下文
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	//// 启动任务
-	//done := make(chan bool)
-	//f := func() (any, error) {
-	//
-	//}
-	//go f
-	for {
-		select {
-		case <-ctx.Done():
-			fmt.Println("Task timed out")
-			//done <- false
-			return nil, fmt.Errorf("timeout")
-		default:
-			a, err := task()
-			if err == nil {
-				//done <- true
-				return a, err
-			}
-			time.Sleep(interval)
-		}
-	}
 }

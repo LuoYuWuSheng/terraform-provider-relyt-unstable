@@ -1,4 +1,4 @@
-package provider
+package resource
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	tfModel "terraform-provider-relyt/internal/provider"
 	"terraform-provider-relyt/internal/provider/client"
 )
 
@@ -53,13 +54,13 @@ func (r *dwUserResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 // Create a new resource.
 func (r *dwUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from dwUserModel
-	var dwUserModel DWUserModel
+	var dwUserModel tfModel.DWUserModel
 	diags := req.Plan.Get(ctx, &dwUserModel)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	meta := RouteRegionUri(ctx, dwUserModel.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := tfModel.RouteRegionUri(ctx, dwUserModel.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -102,7 +103,7 @@ func (r *dwUserResource) Create(ctx context.Context, req resource.CreateRequest,
 // Read resource information.
 func (r *dwUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
-	var state DWUserModel
+	var state tfModel.DWUserModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -113,7 +114,7 @@ func (r *dwUserResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 	//state.ID = state.AccountName
-	meta := RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := tfModel.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -155,14 +156,14 @@ func (r *dwUserResource) Read(ctx context.Context, req resource.ReadRequest, res
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *dwUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	//resp.Diagnostics.AddError("not support", "update account not supported")
-	var plan DWUserModel
+	var plan tfModel.DWUserModel
 	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	// read old status
-	var stat DWUserModel
+	var stat tfModel.DWUserModel
 	req.State.Get(ctx, &stat)
 	if resp.Diagnostics.HasError() {
 		return
@@ -178,7 +179,7 @@ func (r *dwUserResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	plan.ID = plan.AccountName
-	meta := RouteRegionUri(ctx, plan.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := tfModel.RouteRegionUri(ctx, plan.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -199,14 +200,14 @@ func (r *dwUserResource) Update(ctx context.Context, req resource.UpdateRequest,
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *dwUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
-	var state DWUserModel
+	var state tfModel.DWUserModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	meta := RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := tfModel.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -248,7 +249,7 @@ func (r *dwUserResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *DWUserModel, regionUri string, diagnostics *diag.Diagnostics) {
+func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *tfModel.DWUserModel, regionUri string, diagnostics *diag.Diagnostics) {
 	//dwUserModel.ID = dwUserModel.AccountName
 	asyncResult := client.AsyncResult{
 		AwsIamArn:        dwUserModel.AsyncQueryResultLocationAwsRoleArn.ValueString(),
