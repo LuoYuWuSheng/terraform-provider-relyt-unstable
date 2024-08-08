@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	tfModel "terraform-provider-relyt/internal/provider"
 	"terraform-provider-relyt/internal/provider/client"
+	"terraform-provider-relyt/internal/provider/common"
+	"terraform-provider-relyt/internal/provider/model"
 )
 
-func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan *tfModel.DefaultDps, diagnostics diag.Diagnostics, dwsuId, dpsId string) bool {
-	meta := tfModel.RouteRegionUri(ctx, dwsuId, relytClient, &diagnostics)
+func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan *model.Dps, diagnostics diag.Diagnostics, dwsuId, dpsId string) bool {
+	meta := common.RouteRegionUri(ctx, dwsuId, relytClient, &diagnostics)
 	if diagnostics.HasError() {
 		return true
 	}
@@ -38,7 +39,7 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 }
 
 func WaitDpsReady(ctx context.Context, relytClient *client.RelytClient, regionUri string, dwsuId, dpsId string, diagnostics diag.Diagnostics) (any, error) {
-	queryDpsMode, err := tfModel.TimeOutTask(relytClient.CheckTimeOut, relytClient.CheckInterval, func() (any, error) {
+	queryDpsMode, err := common.TimeOutTask(relytClient.CheckTimeOut, relytClient.CheckInterval, func() (any, error) {
 		dps, err2 := relytClient.GetDps(ctx, regionUri, dwsuId, dpsId)
 		if err2 != nil {
 			//这里判断是否要充实

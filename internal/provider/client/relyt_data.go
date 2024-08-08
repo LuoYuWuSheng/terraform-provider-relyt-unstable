@@ -1,10 +1,12 @@
 package client
 
 const (
-	DPS_STATUS_READY    = "READY"
-	DPS_STATUS_DROPPED  = "DROPPED"
-	CODE_SUCCESS        = 200
-	CODE_USER_NOT_FOUND = 134084
+	DPS_STATUS_READY     = "READY"
+	DPS_STATUS_DROPPED   = "DROPPED"
+	PRIVATE_LINK_READY   = "READY"
+	PRIVATE_LINK_UNKNOWN = "UNKNOWN"
+	CODE_SUCCESS         = 200
+	CODE_USER_NOT_FOUND  = 134084
 	//CODE_ROLE_NOT_EXIST = 134085
 	CODE_DPS_NOT_FOUND  = 137073
 	CODE_DWSU_NOT_FOUND = 65544
@@ -171,4 +173,17 @@ type Boto3AccessInfo struct {
 	AccessKeyId string `json:"accessKeyId,omitempty"`
 	AccessKey   string `json:"accessKey,omitempty"`
 	SecretKey   string `json:"secretKey,omitempty"`
+}
+
+type PrivateLinkService struct {
+	AllowedPrincipals *[]string `json:"allowedPrincipals,omitempty"`
+	ServiceName       string    `json:"serviceName,omitempty"`
+	ServiceType       string    `json:"serviceType,omitempty"`
+	Status            string    `json:"status,omitempty"`
+}
+
+type IntegrationInfo struct {
+	ExternalId     string `json:"externalId,omitempty"`
+	RelytPrincipal string `json:"relytPrincipal,omitempty"`
+	RelytVpc       string `json:"relytVpc,omitempty"`
 }

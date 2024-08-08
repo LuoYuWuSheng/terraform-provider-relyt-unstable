@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	tfModel "terraform-provider-relyt/internal/provider"
 	"terraform-provider-relyt/internal/provider/client"
+	"terraform-provider-relyt/internal/provider/common"
+	"terraform-provider-relyt/internal/provider/model"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -28,7 +29,8 @@ func NewDpsResource() resource.Resource {
 
 // orderResource is the resource implementation.
 type dpsResource struct {
-	client *client.RelytClient
+	RelytClientResource
+	//client *client.RelytClient
 }
 
 // Metadata returns the resource type name.
@@ -56,13 +58,13 @@ func (r *dpsResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 // Create a new resource.
 func (r *dpsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from dpsModel
-	var dpsModel tfModel.DpsModel
+	var dpsModel model.DpsModel
 	diags := req.Plan.Get(ctx, &dpsModel)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	meta := tfModel.RouteRegionUri(ctx, dpsModel.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := common.RouteRegionUri(ctx, dpsModel.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -126,13 +128,13 @@ func (r *dpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 // Read resource information.
 func (r *dpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
-	var state tfModel.DpsModel
+	var state model.DpsModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	meta := tfModel.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := common.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -156,11 +158,11 @@ func (r *dpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *dpsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan = tfModel.DpsModel{}
+	var plan = model.DpsModel{}
 	req.Plan.Get(ctx, &plan)
-	var state = tfModel.DpsModel{}
+	var state = model.DpsModel{}
 	req.State.Get(ctx, &state)
-	updateDps(ctx, r.client, &state.DefaultDps, &plan.DefaultDps, resp.Diagnostics, state.DwsuId.ValueString(), state.ID.ValueString())
+	updateDps(ctx, r.client, &state.Dps, &plan.Dps, resp.Diagnostics, state.DwsuId.ValueString(), state.ID.ValueString())
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -173,14 +175,14 @@ func (r *dpsResource) Update(ctx context.Context, req resource.UpdateRequest, re
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *dpsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
-	var state tfModel.DpsModel
+	var state model.DpsModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	meta := tfModel.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := common.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -195,7 +197,7 @@ func (r *dpsResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 		)
 		return
 	}
-	_, err = tfModel.TimeOutTask(r.client.CheckTimeOut, r.client.CheckInterval, func() (any, error) {
+	_, err = common.TimeOutTask(r.client.CheckTimeOut, r.client.CheckInterval, func() (any, error) {
 		dps, err2 := r.client.GetDps(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
 		if err2 != nil {
 			//这里判断是否要重试
@@ -214,26 +216,6 @@ func (r *dpsResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 		)
 		return
 	}
-}
-
-// Configure adds the provider configured client to the resource.
-func (r *dpsResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	// Add a nil check when handling ProviderData because Terraform
-	// sets that data after it calls the ConfigureProvider RPC.
-	if req.ProviderData == nil {
-		return
-	}
-
-	relytClient, ok := req.ProviderData.(*client.RelytClient)
-
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *RelytClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-	r.client = relytClient
 }
 
 func (r *dpsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

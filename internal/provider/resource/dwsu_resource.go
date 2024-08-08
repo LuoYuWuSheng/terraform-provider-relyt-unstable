@@ -13,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	tfModel "terraform-provider-relyt/internal/provider"
 	"terraform-provider-relyt/internal/provider/client"
+	"terraform-provider-relyt/internal/provider/common"
+	"terraform-provider-relyt/internal/provider/model"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -31,7 +32,7 @@ func NewDwsuResource() resource.Resource {
 
 // orderResource is the resource implementation.
 type dwsuResource struct {
-	client *client.RelytClient
+	RelytClientResource
 }
 
 // Metadata returns the resource type name.
@@ -56,6 +57,8 @@ func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"default_dps": schema.SingleNestedAttribute{
 				Required: true,
 				Attributes: map[string]schema.Attribute{
+					//"dwsu_id":     schema.StringAttribute{Computed: true, Optional: true, Description: "The ID of the service unit.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+					//"id":          schema.StringAttribute{Computed: true, Optional: true, Description: "The ID of the DPS cluster.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
 					"name":        schema.StringAttribute{Required: true, Description: "The name of the DPS cluster."},
 					"description": schema.StringAttribute{Optional: true, Description: "The description of the DPS cluster."},
 					"engine":      schema.StringAttribute{Required: true, Description: "The type of the DPS cluster. hybrid, extreme, vector"},
@@ -87,7 +90,7 @@ func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 // Create a new resource.
 func (r *dwsuResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from dwsuModel
-	var dwsuModel tfModel.DwsuModel
+	var dwsuModel model.DwsuModel
 	diags := req.Plan.Get(ctx, &dwsuModel)
 	resp.Diagnostics.Append(diags...)
 	//dwsuModel.Variant = types.StringValue("basic")
@@ -163,7 +166,7 @@ func (r *dwsuResource) Create(ctx context.Context, req resource.CreateRequest, r
 func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	// Get current state
 	//这里只能改compute的值，改Required或option额值则会触发update
-	var state tfModel.DwsuModel
+	var state model.DwsuModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -188,9 +191,9 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *dwsuResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	//resp.Diagnostics.AddError("not support", "update dwsu not supported! please rollback your change!")
-	var plan = tfModel.DwsuModel{}
+	var plan = model.DwsuModel{}
 	req.Plan.Get(ctx, &plan)
-	var state = tfModel.DwsuModel{}
+	var state = model.DwsuModel{}
 	req.State.Get(ctx, &state)
 	if plan.DefaultDps.Size != state.DefaultDps.Size {
 		if updateDps(ctx, r.client, state.DefaultDps, plan.DefaultDps, resp.Diagnostics, state.ID.ValueString(), state.ID.ValueString()) {
@@ -204,7 +207,7 @@ func (r *dwsuResource) Update(ctx context.Context, req resource.UpdateRequest, r
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *dwsuResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// Retrieve values from state
-	var state tfModel.DwsuModel
+	var state model.DwsuModel
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -240,7 +243,7 @@ func (r *dwsuResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 	//等待删除完成
-	_, err = tfModel.TimeOutTask(r.client.CheckTimeOut, r.client.CheckInterval, func() (any, error) {
+	_, err = common.TimeOutTask(r.client.CheckTimeOut, r.client.CheckInterval, func() (any, error) {
 		dwsu, err2 := r.client.GetDwsu(ctx, state.ID.ValueString())
 		if err2 != nil || dwsu == nil {
 			//这里判断是否要充实
@@ -286,7 +289,7 @@ func (r *dwsuResource) ImportState(ctx context.Context, req resource.ImportState
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics *diag.Diagnostics, tfDwsuModel *tfModel.DwsuModel, relytDwsuModel *client.DwsuModel) {
+func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics *diag.Diagnostics, tfDwsuModel *model.DwsuModel, relytDwsuModel *client.DwsuModel) {
 	endpointsTFType := types.ObjectType{
 		AttrTypes: map[string]attr.Type{
 			"extensions": types.MapType{
@@ -302,10 +305,12 @@ func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics
 		},
 	}
 	if relytDwsuModel != nil && tfDwsuModel != nil {
-		var tfEndPoints []tfModel.Endpoints
+		//tfDwsuModel.DefaultDps.DwsuId = types.StringValue(relytDwsuModel.ID)
+		//tfDwsuModel.DefaultDps.ID = types.StringValue(relytDwsuModel.ID)
+		var tfEndPoints []model.Endpoints
 		if len(relytDwsuModel.Endpoints) > 0 {
 			for _, endpoint := range relytDwsuModel.Endpoints {
-				tfEndpoint := tfModel.Endpoints{
+				tfEndpoint := model.Endpoints{
 					//Extensions: types.MapValue(types.StringType),
 					Host:     types.StringValue(endpoint.Host),
 					ID:       types.StringValue(endpoint.ID),
@@ -340,7 +345,7 @@ func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics
 }
 
 func WaitDwsuReady(ctx context.Context, relytClient *client.RelytClient, dpsId string) (any, error) {
-	queryDwsuModel, err := tfModel.TimeOutTask(relytClient.CheckTimeOut, relytClient.CheckInterval, func() (any, error) {
+	queryDwsuModel, err := common.TimeOutTask(relytClient.CheckTimeOut, relytClient.CheckInterval, func() (any, error) {
 		dwsu, err2 := relytClient.GetDwsu(ctx, dpsId)
 		if err2 != nil {
 			//这里判断是否要重试

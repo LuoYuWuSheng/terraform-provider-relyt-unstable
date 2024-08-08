@@ -1,4 +1,4 @@
-package provider
+package common
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 func RouteRegionUri(ctx context.Context, dwsuId string, relytClient *client.RelytClient,
 	diag *diag.Diagnostics) *client.OpenApiMetaInfo {
-	meta, err := RetryFunction[client.OpenApiMetaInfo](ctx, 5, 1, 1.0,
+	meta, err := CommonRetry[client.OpenApiMetaInfo](ctx,
 		func() (*client.OpenApiMetaInfo, error) {
 			return relytClient.GetDwsuOpenApiMeta(ctx, dwsuId)
 		})
@@ -45,6 +45,10 @@ func RetryFunction[T any](ctx context.Context, retryNum, intervalSecond int,
 	}
 
 	return result, err
+}
+
+func CommonRetry[T any](ctx context.Context, retryableFunc func() (*T, error)) (*T, error) {
+	return RetryFunction(ctx, 5, 1, 1.0, retryableFunc)
 }
 
 func TimeOutTask(timeoutSec int64, checkIntervalSec int32, task func() (any, error)) (any, error) {

@@ -1,4 +1,4 @@
-package provider
+package model
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -23,7 +23,7 @@ type Endpoints struct {
 	URI        types.String `tfsdk:"uri"`
 }
 
-type DefaultDps struct {
+type Dps struct {
 	Description types.String `tfsdk:"description"`
 	Engine      types.String `tfsdk:"engine"`
 	Name        types.String `tfsdk:"name"`
@@ -38,7 +38,7 @@ type DwsuModel struct {
 	Variant    types.String `tfsdk:"variant"`
 	Edition    types.String `tfsdk:"edition"`
 	Domain     types.String `tfsdk:"domain"`
-	DefaultDps *DefaultDps  `tfsdk:"default_dps"`
+	DefaultDps *Dps         `tfsdk:"default_dps"`
 	//Endpoints  []Endpoints  `tfsdk:"endpoints"`
 	Endpoints types.List `tfsdk:"endpoints"`
 	//LastUpdated types.Int64  `tfsdk:"last_updated"`
@@ -48,7 +48,7 @@ type DwsuModel struct {
 type DpsModel struct {
 	DwsuId types.String `tfsdk:"dwsu_id"`
 	ID     types.String `tfsdk:"id"`
-	DefaultDps
+	Dps
 	//Name        types.String `tfsdk:"name"`
 	//Description types.String `tfsdk:"description"`
 	//Engine      types.String `tfsdk:"engine"`
@@ -67,27 +67,4 @@ type DWUserModel struct {
 	AsyncQueryResultLocationAwsRoleArn types.String `tfsdk:"async_query_result_location_aws_role_arn"`
 	//LastUpdated                        types.String `tfsdk:"last_updated"`
 	//Status                             types.String `tfsdk:"status"`
-}
-
-type ServiceAccountModel struct {
-	DwsuId types.String `tfsdk:"dwsu_id"`
-	//ServiceAccountInfos ServiceAccountInfo `tfsdk:"account_infos"`
-	ServiceAccountInfos types.List `tfsdk:"account_infos"`
-}
-
-type ServiceAccountInfo struct {
-	Type        types.String `tfsdk:"type"`
-	AccountInfo types.Map    `tfsdk:"account_info"`
-}
-
-type Boto3AccessInfoModel struct {
-	DwsuId           types.String `tfsdk:"dwsu_id"`
-	DwUserId         types.String `tfsdk:"account_id"`
-	Boto3AccessInfos types.List   `tfsdk:"boto3_access_infos"`
-}
-
-type Boto3AccessInfo struct {
-	AccessKeyId types.String `tfsdk:"access_key_id"`
-	AccessKey   types.String `tfsdk:"access_key"`
-	SecretKey   types.String `tfsdk:"secret_key"`
 }
