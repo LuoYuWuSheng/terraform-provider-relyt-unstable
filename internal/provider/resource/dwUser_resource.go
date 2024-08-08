@@ -7,10 +7,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	tfModel "terraform-provider-relyt/internal/provider"
 	"terraform-provider-relyt/internal/provider/client"
+	"terraform-provider-relyt/internal/provider/common"
+	tfModel "terraform-provider-relyt/internal/provider/model"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -41,12 +44,12 @@ func (r *dwUserResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
 			"dwsu_id":                             schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
-			"id":                                  schema.StringAttribute{Computed: true, Description: "The ID of the DW user."},
+			"id":                                  schema.StringAttribute{Computed: true, Description: "The ID of the DW user.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
 			"account_name":                        schema.StringAttribute{Required: true, Description: "The name of the DW user, which is unique in the instance. The name is the email address."},
 			"account_password":                    schema.StringAttribute{Required: true, Description: "initPassword"},
-			"datalake_aws_lakeformation_role_arn": schema.StringAttribute{Optional: true, Computed: true, Description: "The ARN of the cross-account IAM role, optional."},
-			"async_query_result_location_prefix":  schema.StringAttribute{Optional: true, Computed: true, Description: "The prefix of the path to the S3 output location."},
-			"async_query_result_location_aws_role_arn": schema.StringAttribute{Optional: true, Computed: true, Description: "The ARN of the role to access the output location, optional."},
+			"datalake_aws_lakeformation_role_arn": schema.StringAttribute{Optional: true, Description: "The ARN of the cross-account IAM role, optional."},
+			"async_query_result_location_prefix":  schema.StringAttribute{Optional: true, Description: "The prefix of the path to the S3 output location."},
+			"async_query_result_location_aws_role_arn": schema.StringAttribute{Optional: true, Description: "The ARN of the role to access the output location, optional."},
 		},
 	}
 }
@@ -60,7 +63,7 @@ func (r *dwUserResource) Create(ctx context.Context, req resource.CreateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	meta := tfModel.RouteRegionUri(ctx, dwUserModel.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := common.RouteRegionUri(ctx, dwUserModel.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -78,21 +81,22 @@ func (r *dwUserResource) Create(ctx context.Context, req resource.CreateRequest,
 		)
 		return
 	}
-	dwUserModel.ID = types.StringValue(relytAccount.Name)
 	r.handleAccountConfig(ctx, &dwUserModel, regionUri, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
-		err := r.client.DropAccount(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error rollback create dwuser",
-				"Could not rollback dwuser! please clear it with destroy or manual! userId: "+dwUserModel.ID.ValueString()+""+err.Error(),
-			)
-		}
+		//这里注释掉主动回滚，应该由用户回滚
+		//err := r.client.DropAccount(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
+		//if err != nil {
+		//	resp.Diagnostics.AddError(
+		//		"Error rollback create dwuser",
+		//		"Could not rollback dwuser! please clear it with destroy or manual! userId: "+dwUserModel.ID.ValueString()+""+err.Error(),
+		//	)
+		//}
 	}
 	if resp.Diagnostics.HasError() {
 		//如果有异常，dwuser不要写状态
 		return
 	}
+	dwUserModel.ID = types.StringValue(relytAccount.Name)
 	diags = resp.State.Set(ctx, dwUserModel)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -114,12 +118,14 @@ func (r *dwUserResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 	//state.ID = state.AccountName
-	meta := tfModel.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := common.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	config, err := r.client.GetAsyncAccountConfig(ctx, meta.URI, state.DwsuId.ValueString(), state.ID.ValueString())
+	config, err := common.CommonRetry(ctx, func() (*client.AsyncResult, error) {
+		return r.client.GetAsyncAccountConfig(ctx, meta.URI, state.DwsuId.ValueString(), state.ID.ValueString())
+	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error get dwuser asyncAccountConfig",
@@ -128,12 +134,19 @@ func (r *dwUserResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 	if config != nil {
-		state.AsyncQueryResultLocationPrefix = types.StringValue(config.S3LocationPrefix)
-		state.AsyncQueryResultLocationAwsRoleArn = types.StringValue(config.AwsIamArn)
+		if config.S3LocationPrefix != "" {
+			state.AsyncQueryResultLocationPrefix = types.StringValue(config.S3LocationPrefix)
+		}
+		if config.AwsIamArn != "" {
+			state.AsyncQueryResultLocationAwsRoleArn = types.StringValue(config.AwsIamArn)
+		}
 
 	}
 
-	lakeInfo, err := r.client.GetLakeFormationConfig(ctx, meta.URI, state.DwsuId.ValueString(), state.ID.ValueString())
+	lakeInfo, err := common.CommonRetry(ctx, func() (*client.LakeFormation, error) {
+		return r.client.GetLakeFormationConfig(ctx, meta.URI, state.DwsuId.ValueString(), state.ID.ValueString())
+	})
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error get dwuser LakeFormationConfig",
@@ -141,7 +154,7 @@ func (r *dwUserResource) Read(ctx context.Context, req resource.ReadRequest, res
 		)
 		return
 	}
-	if lakeInfo != nil {
+	if lakeInfo != nil && lakeInfo.IAMRole != "" {
 		state.DatalakeAwsLakeformationRoleArn = types.StringValue(lakeInfo.IAMRole)
 	}
 
@@ -178,8 +191,8 @@ func (r *dwUserResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	plan.ID = plan.AccountName
-	meta := tfModel.RouteRegionUri(ctx, plan.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	//plan.ID = plan.AccountName
+	meta := common.RouteRegionUri(ctx, plan.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -207,14 +220,21 @@ func (r *dwUserResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	meta := tfModel.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	meta := common.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	regionUri := meta.URI
 
-	// Delete existing order
-	err := r.client.DropAccount(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
+	// Delete existing account
+	_, err := common.CommonRetry(ctx, func() (*any, error) {
+		err := r.client.DropAccount(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
+		return nil, err
+	})
+	if err != nil {
+		return
+	}
+	//err := r.client.DropAccount(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
 	if err != nil {
 		//要不要加error
 		resp.Diagnostics.AddError(
@@ -259,14 +279,16 @@ func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *t
 		IAMRole: dwUserModel.DatalakeAwsLakeformationRoleArn.ValueString(),
 	}
 	tflog.Info(ctx, fmt.Sprintf("=======uknown %t nil %t", dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsUnknown(), dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsNull()))
-	if dwUserModel.AsyncQueryResultLocationPrefix.IsUnknown() {
-		dwUserModel.AsyncQueryResultLocationPrefix = types.StringNull()
-	}
-	if dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsUnknown() {
-		dwUserModel.AsyncQueryResultLocationAwsRoleArn = types.StringNull()
-	}
+	//if dwUserModel.AsyncQueryResultLocationPrefix.IsUnknown() {
+	//	dwUserModel.AsyncQueryResultLocationPrefix = types.StringNull()
+	//}
+	//if dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsUnknown() {
+	//	dwUserModel.AsyncQueryResultLocationAwsRoleArn = types.StringNull()
+	//}
 	if !dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsNull() && !dwUserModel.AsyncQueryResultLocationPrefix.IsNull() {
-		_, err := r.client.AsyncAccountConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString(), asyncResult)
+		_, err := common.CommonRetry[client.CommonRelytResponse[string]](ctx, func() (*client.CommonRelytResponse[string], error) {
+			return r.client.AsyncAccountConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString(), asyncResult)
+		})
 		if err != nil {
 			diagnostics.AddError(
 				"Error config dwuser",
@@ -275,18 +297,9 @@ func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *t
 			//return
 		}
 	} else if dwUserModel.AsyncQueryResultLocationPrefix.IsNull() && dwUserModel.AsyncQueryResultLocationAwsRoleArn.IsNull() {
-		//config, err := r.client.GetAsyncAccountConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
-		//if err != nil {
-		//	diagnostics.AddError(
-		//		"Error read dwuser",
-		//		"Could not read asyncResult before drop dwuser async config, unexpected error: "+err.Error(),
-		//	)
-		//} else {
-		//	if config != nil && config.AwsIamArn != "" {
-		//
-		//	}
-		//}
-		_, err := r.client.DeleteAsyncAccountConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
+		_, err := common.CommonRetry[client.CommonRelytResponse[string]](ctx, func() (*client.CommonRelytResponse[string], error) {
+			return r.client.DeleteAsyncAccountConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
+		})
 		if err != nil {
 			diagnostics.AddError(
 				"Error config dwuser",
@@ -305,7 +318,9 @@ func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *t
 		dwUserModel.DatalakeAwsLakeformationRoleArn = types.StringNull()
 	}
 	if !dwUserModel.DatalakeAwsLakeformationRoleArn.IsNull() {
-		_, err := r.client.LakeFormationConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString(), lakeFormation)
+		_, err := common.CommonRetry[client.CommonRelytResponse[string]](ctx, func() (*client.CommonRelytResponse[string], error) {
+			return r.client.LakeFormationConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString(), lakeFormation)
+		})
 		if err != nil {
 			diagnostics.AddError(
 				"Error config dwuser",
@@ -314,7 +329,9 @@ func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *t
 			//return
 		}
 	} else if dwUserModel.DatalakeAwsLakeformationRoleArn.IsNull() {
-		_, err := r.client.DeleteLakeFormationConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
+		_, err := common.CommonRetry[client.CommonRelytResponse[string]](ctx, func() (*client.CommonRelytResponse[string], error) {
+			return r.client.DeleteLakeFormationConfig(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
+		})
 		if err != nil {
 			diagnostics.AddError(
 				"Error config dwuser",

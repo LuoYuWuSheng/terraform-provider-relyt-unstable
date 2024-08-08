@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"terraform-provider-relyt/internal/provider/client"
 	relytDS "terraform-provider-relyt/internal/provider/datasource"
+	"terraform-provider-relyt/internal/provider/model"
 	relytRS "terraform-provider-relyt/internal/provider/resource"
 )
 
@@ -100,7 +101,7 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 // 读取配置文件
 func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 
-	var data RelytProviderModel
+	var data model.RelytProviderModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -211,6 +212,7 @@ func (p *RelytProvider) Resources(ctx context.Context) []func() resource.Resourc
 		relytRS.NewdwUserResource,
 		relytRS.NewDpsResource,
 		relytRS.NewDwsuResource,
+		relytRS.NewPrivateLinkResource,
 		//NewTestResource,
 	}
 }

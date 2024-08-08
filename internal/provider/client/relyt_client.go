@@ -297,6 +297,55 @@ func (p *RelytClient) GetDwsuServiceAccount(ctx context.Context, regionUri, dwSe
 	return *resp.Data, nil
 }
 
+func (p *RelytClient) CreatePrivateLinkService(ctx context.Context, regionUri, dwServiceUnitId string, pl PrivateLinkService) (*PrivateLinkService, error) {
+	path := fmt.Sprintf("/dwsu/%s/private-link-services", dwServiceUnitId)
+	resp := CommonRelytResponse[PrivateLinkService]{}
+	pl.ServiceName = ""
+	pl.Status = ""
+	err := doHttpRequest(p, ctx, regionUri, path, "PUT", &resp, pl, nil, nil)
+	if err != nil {
+		tflog.Error(ctx, "Error create private-link:"+err.Error())
+		return nil, err
+	}
+	return resp.Data, nil
+}
+
+func (p *RelytClient) GetPrivateLinkService(ctx context.Context, regionUri, dwServiceUnitId, serviceType string) (*PrivateLinkService, error) {
+	path := fmt.Sprintf("/dwsu/%s/private-link-services/%s", dwServiceUnitId, serviceType)
+	resp := CommonRelytResponse[PrivateLinkService]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "GET", &resp, nil, nil, nil)
+	if err != nil {
+		tflog.Error(ctx, "Error get private-link:"+err.Error())
+		return nil, err
+	}
+	return resp.Data, nil
+}
+
+func (p *RelytClient) PatchPrivateLinkService(ctx context.Context, regionUri, dwServiceUnitId, serviceType string, pl PrivateLinkService) (*CommonRelytResponse[PrivateLinkService], error) {
+	path := fmt.Sprintf("/dwsu/%s/private-link-services/%s", dwServiceUnitId, serviceType)
+	pl.ServiceType = ""
+	pl.ServiceName = ""
+	pl.Status = ""
+	resp := CommonRelytResponse[PrivateLinkService]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "PATCH", &resp, pl, nil, nil)
+	if err != nil {
+		tflog.Error(ctx, "Error patch private-link:"+err.Error())
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (p *RelytClient) DeletePrivateLinkService(ctx context.Context, regionUri, dwServiceUnitId, serviceType string) (*CommonRelytResponse[string], error) {
+	path := fmt.Sprintf("/dwsu/%s/private-link-services/%s", dwServiceUnitId, serviceType)
+	resp := CommonRelytResponse[string]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "DELETE", &resp, nil, nil, nil)
+	if err != nil {
+		tflog.Error(ctx, "Error delete private-link:"+err.Error())
+		return nil, err
+	}
+	return &resp, nil
+}
+
 func doHttpRequest[T any](p *RelytClient, ctx context.Context, host, path, method string,
 	respMode *CommonRelytResponse[T],
 	request any,
