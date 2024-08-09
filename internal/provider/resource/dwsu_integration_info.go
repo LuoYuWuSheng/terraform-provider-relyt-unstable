@@ -2,10 +2,14 @@ package resource
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"terraform-provider-relyt/internal/provider/client"
 	"terraform-provider-relyt/internal/provider/common"
@@ -36,11 +40,12 @@ func (r *dwsuIntegrationInfoResource) Schema(_ context.Context, _ resource.Schem
 		Attributes: map[string]schema.Attribute{
 			"dwsu_id": schema.StringAttribute{Required: true},
 			"integration_info": schema.SingleNestedAttribute{
-				Optional: true,
+				Required:    true,
+				Description: "used to set Integration Info. Empty block will use the system default Integration Info ",
 				Attributes: map[string]schema.Attribute{
-					"external_id":     schema.StringAttribute{Optional: true, Description: "The externalId of dwsu"},
-					"relyt_principle": schema.StringAttribute{Computed: true, Description: "The relyt Principal"},
-					"relyt_vpc":       schema.StringAttribute{Computed: true, Description: "The relyt VPC"},
+					"external_id":     schema.StringAttribute{Optional: true, Computed: true, Description: "The externalId of dwsu", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+					"relyt_principle": schema.StringAttribute{Computed: true, Description: "The relyt Principal", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+					"relyt_vpc":       schema.StringAttribute{Computed: true, Description: "The relyt VPC", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
 				},
 			},
 		},
@@ -55,13 +60,19 @@ func (r *dwsuIntegrationInfoResource) Create(ctx context.Context, req resource.C
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if !plan.IntegrationInfo.ExternalId.IsNull() {
+
+	//if !plan.IntegrationInfo.IsNull() && !plan.IntegrationInfo.IsUnknown() {
+	//
+	//}
+	info := tfModel.IntegrationInfo{}
+	types.Object.As(plan.IntegrationInfo, ctx, &info, basetypes.ObjectAsOptions{})
+	if !info.ExternalId.IsUnknown() {
 		meta := common.RouteRegionUri(ctx, plan.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 		regionUri := meta.URI
-		r.updateIntegrationInfo(ctx, regionUri, &plan, &resp.Diagnostics)
+		r.updateIntegrationInfo(ctx, regionUri, plan.DwsuId.ValueString(), &info, &resp.Diagnostics)
 	}
 	meta := common.RouteRegionUri(ctx, plan.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
@@ -111,11 +122,18 @@ func (r *dwsuIntegrationInfoResource) readIntegrationInfo(ctx context.Context, r
 		diagnostics.AddError("failed to get integration info", "get dwsu integration info get err:"+msg)
 		return
 	}
-	state.IntegrationInfo = &tfModel.IntegrationInfo{
+	integrationInfo := tfModel.IntegrationInfo{
 		ExternalId:     types.StringValue(info.ExternalId),
 		RelytPrinciple: types.StringValue(info.RelytPrincipal),
 		RelytVpc:       types.StringValue(info.RelytVpc),
 	}
+	tfObject, d := types.ObjectValueFrom(ctx, map[string]attr.Type{
+		"external_id":     types.StringType,
+		"relyt_principle": types.StringType,
+		"relyt_vpc":       types.StringType,
+	}, integrationInfo)
+	diagnostics.Append(d...)
+	state.IntegrationInfo = tfObject
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -133,22 +151,31 @@ func (r *dwsuIntegrationInfoResource) Update(ctx context.Context, req resource.U
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if !plan.IntegrationInfo.ExternalId.Equal(stat.IntegrationInfo.ExternalId) {
+	stateInfo := tfModel.IntegrationInfo{}
+	planInfo := tfModel.IntegrationInfo{}
+	types.Object.As(plan.IntegrationInfo, ctx, &planInfo, basetypes.ObjectAsOptions{})
+	types.Object.As(stat.IntegrationInfo, ctx, &stateInfo, basetypes.ObjectAsOptions{})
+	if !stateInfo.ExternalId.Equal(planInfo.ExternalId) {
 		meta := common.RouteRegionUri(ctx, stat.DwsuId.ValueString(), r.client, &resp.Diagnostics)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 		regionUri := meta.URI
-		r.updateIntegrationInfo(ctx, regionUri, &plan, &resp.Diagnostics)
+		r.updateIntegrationInfo(ctx, regionUri, stat.DwsuId.ValueString(), &planInfo, &resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		r.readIntegrationInfo(ctx, regionUri, &stat, &resp.Diagnostics)
+		resp.State.Set(ctx, stat)
 	}
 }
 
-func (r *dwsuIntegrationInfoResource) updateIntegrationInfo(ctx context.Context, regionUri string, info *tfModel.IntegrationModel, diagnostic *diag.Diagnostics) {
+func (r *dwsuIntegrationInfoResource) updateIntegrationInfo(ctx context.Context, regionUri, dwsuId string, info *tfModel.IntegrationInfo, diagnostic *diag.Diagnostics) {
 	integrationInfo := client.IntegrationInfo{
-		ExternalId: info.IntegrationInfo.ExternalId.ValueString(),
+		ExternalId: info.ExternalId.ValueString(),
 	}
 	_, err := common.CommonRetry(ctx, func() (*client.CommonRelytResponse[string], error) {
-		return r.client.PatchIntegration(ctx, regionUri, info.DwsuId.ValueString(), integrationInfo)
+		return r.client.PatchIntegration(ctx, regionUri, dwsuId, integrationInfo)
 	})
 	if err != nil {
 		diagnostic.AddError("failed update integration info", "update integration info get err"+err.Error())
