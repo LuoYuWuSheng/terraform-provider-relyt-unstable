@@ -363,7 +363,7 @@ func (p *RelytClient) PatchIntegration(ctx context.Context, regionUri, dwService
 	info.RelytVpc = ""
 	info.RelytPrincipal = ""
 	resp := CommonRelytResponse[string]{}
-	err := doHttpRequest(p, ctx, regionUri, path, "PATCH", &resp, nil, nil, nil)
+	err := doHttpRequest(p, ctx, regionUri, path, "PATCH", &resp, info, nil, nil)
 	if err != nil {
 		tflog.Error(ctx, "Error patch dwsu integration:"+err.Error())
 		return nil, err

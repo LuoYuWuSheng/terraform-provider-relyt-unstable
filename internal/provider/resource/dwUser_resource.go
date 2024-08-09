@@ -82,23 +82,23 @@ func (r *dwUserResource) Create(ctx context.Context, req resource.CreateRequest,
 		)
 		return
 	}
+	dwUserModel.ID = types.StringValue(relytAccount.Name)
+	diags = resp.State.Set(ctx, dwUserModel)
 	r.handleAccountConfig(ctx, &dwUserModel, regionUri, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		//这里注释掉主动回滚，应该由用户回滚
-		//err := r.client.DropAccount(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
-		//if err != nil {
-		//	resp.Diagnostics.AddError(
-		//		"Error rollback create dwuser",
-		//		"Could not rollback dwuser! please clear it with destroy or manual! userId: "+dwUserModel.ID.ValueString()+""+err.Error(),
-		//	)
-		//}
-	}
+	//if resp.Diagnostics.HasError() {
+	//这里注释掉主动回滚，应该由用户回滚
+	//err := r.client.DropAccount(ctx, regionUri, dwUserModel.DwsuId.ValueString(), dwUserModel.ID.ValueString())
+	//if err != nil {
+	//	resp.Diagnostics.AddError(
+	//		"Error rollback create dwuser",
+	//		"Could not rollback dwuser! please clear it with destroy or manual! userId: "+dwUserModel.ID.ValueString()+""+err.Error(),
+	//	)
+	//}
+	//}
 	if resp.Diagnostics.HasError() {
 		//如果有异常，dwuser不要写状态
 		return
 	}
-	dwUserModel.ID = types.StringValue(relytAccount.Name)
-	diags = resp.State.Set(ctx, dwUserModel)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
