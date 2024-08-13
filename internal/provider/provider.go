@@ -214,7 +214,7 @@ func (p *RelytProvider) Resources(ctx context.Context) []func() resource.Resourc
 		relytRS.NewDwsuResource,
 		relytRS.NewPrivateLinkResource,
 		relytRS.NewDwsuIntegrationInfoResource,
-		//NewTestResource,
+		//relytRS.NewTestResource,
 	}
 }
 

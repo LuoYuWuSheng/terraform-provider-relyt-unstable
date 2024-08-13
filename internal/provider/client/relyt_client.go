@@ -302,7 +302,8 @@ func (p *RelytClient) CreatePrivateLinkService(ctx context.Context, regionUri, d
 	resp := CommonRelytResponse[PrivateLinkService]{}
 	pl.ServiceName = ""
 	pl.Status = ""
-	err := doHttpRequest(p, ctx, regionUri, path, "PUT", &resp, pl, nil, nil)
+	header := map[string]string{"x-maxone-idempotent": "false"}
+	err := doHttpRequestWithHeader(p, ctx, regionUri, path, "PUT", &resp, pl, nil, header, nil)
 	if err != nil {
 		tflog.Error(ctx, "Error create private-link:"+err.Error())
 		return nil, err
@@ -376,6 +377,15 @@ func doHttpRequest[T any](p *RelytClient, ctx context.Context, host, path, metho
 	request any,
 	parameter map[string]string,
 	codeHandler func(response *CommonRelytResponse[T], respDumpByte []byte) (*CommonRelytResponse[T], error)) (err error) {
+	return doHttpRequestWithHeader(p, ctx, host, path, method, respMode, request, parameter, nil, codeHandler)
+}
+
+func doHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, host, path, method string,
+	respMode *CommonRelytResponse[T],
+	request any,
+	parameter map[string]string,
+	header map[string]string,
+	codeHandler func(response *CommonRelytResponse[T], respDumpByte []byte) (*CommonRelytResponse[T], error)) (err error) {
 	if host == "" {
 		host = p.ApiHost
 	}
@@ -409,6 +419,11 @@ func doHttpRequest[T any](p *RelytClient, ctx context.Context, host, path, metho
 	req.Header.Set("x-maxone-api-key", p.AuthKey)
 	req.Header.Set("x-maxone-role-id", p.Role)
 	req.Header.Set("Content-Type", "application/json")
+	if header != nil {
+		for k, v := range header {
+			req.Header.Set(k, v)
+		}
+	}
 	requestString, _ := httputil.DumpRequestOut(req, true)
 	tflog.Info(ctx, "== request: "+string(requestString))
 	client := &http.Client{Timeout: 10 * time.Second}

@@ -3,8 +3,6 @@ package resource
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -36,10 +34,11 @@ func (t TestList) name() {
 }
 
 type TestResource struct {
-	ID types.String `tfsdk:"id"`
+	ID   types.String `tfsdk:"id"`
+	Name types.String `tfsdk:"name"`
 	//mmm types.Map    `tfsdk:"mmm"`
-	Mmm      types.Map  `tfsdk:"mmm"`
-	TestList types.List `tfsdk:"self"`
+	//Mmm      types.Map  `tfsdk:"mmm"`
+	//TestList types.List `tfsdk:"self"`
 	//TestList []TestList `tfsdk:"self"`
 }
 
@@ -58,16 +57,17 @@ func (r *testResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 	resp.Schema = schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"id":  schema.StringAttribute{Computed: true},
-			"mmm": schema.MapAttribute{Computed: true, ElementType: types.StringType},
-			"self": schema.ListNestedAttribute{
-				Computed: true,
-				//ElementType: types.StringType,
-				//NestedObject: schema.StringAttribute{Computed: true},
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{"name": schema.StringAttribute{Computed: true}},
-				},
-			},
+			"id":   schema.StringAttribute{Computed: true},
+			"name": schema.StringAttribute{Optional: true},
+			//"mmm": schema.MapAttribute{Computed: true, ElementType: types.StringType},
+			//"self": schema.ListNestedAttribute{
+			//	Computed: true,
+			//	//ElementType: types.StringType,
+			//	//NestedObject: schema.StringAttribute{Computed: true},
+			//	NestedObject: schema.NestedAttributeObject{
+			//		Attributes: map[string]schema.Attribute{"name": schema.StringAttribute{Computed: true}},
+			//	},
+			//},
 		},
 	}
 }
@@ -83,66 +83,25 @@ func (r *testResource) Create(ctx context.Context, req resource.CreateRequest, r
 	//	return
 	//}
 	tflog.Info(ctx, "pass Diagnostics")
+
+	//plan.Name = types.StringValue("set value")
+	plan.ID = types.StringValue("set values")
 	//一旦拿到ID立刻保存
-	if plan.ID.IsNull() {
-		tflog.Info(ctx, "Plan Id  is null")
-	}
-
-	if plan.ID.IsUnknown() {
-		tflog.Info(ctx, "Plan Id  is unknown")
-	}
-	objectType := types.ObjectType{
-		map[string]attr.Type{
-			"name": types.StringType,
-		},
-	}
-	objectValues := []TestList{{Name: types.StringValue("abc")}}
-	from, diagnostics := types.ListValueFrom(ctx, objectType, objectValues)
-	resp.Diagnostics.Append(diagnostics...)
-	plan.TestList = from
-	mmm := map[string]string{"abc": "def"}
-
-	valueFrom, d := types.MapValueFrom(ctx, types.StringType, mmm)
-	plan.Mmm = valueFrom
-	resp.Diagnostics.Append(d...)
-
-	//tflog.Info(ctx, "test len :"+strconv.Itoa(len(plan.TestList)))
-	//r.mapRelytModelToTerraform(ctx, &resp.Diagnostics, &plan, &model)
-	plan.ID = types.StringValue("abc")
-	resp.State.Set(ctx, plan)
-
-	//old := time.Date(2023, 10, 1, 12, 0, 0, 0, time.UTC)
-	//plan.ID = types.StringValue("fix- id test")
-	//if time.Now().After(old) {
-	//	//resp.Diagnostics.AddError("what", "hh")
-	//	return
+	//objectType := types.ObjectType{
+	//	map[string]attr.Type{
+	//		"name": types.StringType,
+	//	},
 	//}
-	//relytQueryModel := queryDwsuModel.(*client.DwsuModel)
-	//tflog.Info(ctx, "bizId:"+relytQueryModel.ID)
-	//plan.LastUpdated = types.Int64Value(time.Now().UnixMilli())
-	//plan.Status = types.StringValue(relytQueryModel.Status)
-	// Set state to fully populated data
-	diags = resp.State.Set(ctx, plan)
+	//objectValues := []TestList{{Name: types.StringValue("abc")}}
+	//from, diagnostics := types.ListValueFrom(ctx, objectType, objectValues)
+	//resp.Diagnostics.Append(diagnostics...)
+	resp.Diagnostics.AddError("err", "err")
+	//diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 }
-
-//var (
-//	model = client.DwsuModel{Endpoints: []client.Endpoints{
-//		{
-//			Extensions: &map[string]string{"abc": "def"},
-//			Host:       "abc",
-//			ID:         "",
-//			Open:       false,
-//			Port:       0,
-//			Protocol:   "",
-//			Type:       "",
-//			URI:        "",
-//		}},
-//	}
-//)
 
 // Read resource information.
 func (r *testResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -229,36 +188,4 @@ func (r *testResource) UpgradeState(ctx context.Context) map[int64]resource.Stat
 func (r *testResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r *testResource) mapRelytModelToTerraform(ctx context.Context, diagnostics *diag.Diagnostics, tfModel *TestResource, relytDwsuModel *client.DwsuModel) {
-	if relytDwsuModel != nil && tfModel != nil {
-		if len(relytDwsuModel.Endpoints) > 0 {
-			for _, endpoint := range relytDwsuModel.Endpoints {
-				//tfEndpoint := TestList{
-				//Extensions: types.MapValue(types.StringType),
-				//Host:     types.StringValue(endpoint.Host),
-				//ID:       types.StringValue(endpoint.ID),
-				//Open:     types.BoolValue(endpoint.Open),
-				//Port:     types.Int64Value(int64(endpoint.Port)),
-				//Protocol: types.StringValue(endpoint.Protocol),
-				//Type:     types.StringValue(endpoint.Type),
-				//Name: types.StringValue("abc"),
-				//}
-				if endpoint.Extensions != nil {
-					//tfMap := make(map[string]attr.Value, len(*endpoint.Extensions))
-					//for key, v := range *endpoint.Extensions {
-					//	tfMap[key] = types.StringValue(v)
-					//}
-					//tfEndpoint.Extensions.ElementsAs(ctx, &tfMap, false)
-					//mapValue, diage := types.MapValueFrom(ctx, types.StringType, endpoint.Extensions)
-					//diagnostics.Append(diage...)
-					//tfEndpoint.Extensions = mapValue
-				}
-				//types.ListValueFrom(ctx, types.ObjectType{}, tfEndpoint)
-				//tfModel.TestList = append(tfModel.TestList, tfEndpoint)
-				//tfModel.TestList = append(tfModel.TestList, "tfEndpoint")
-			}
-		}
-	}
 }
