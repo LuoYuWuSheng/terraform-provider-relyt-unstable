@@ -240,7 +240,7 @@ func (r *PrivateLinkResource) mapRelytToTFModel(ctx context.Context, linkInfo *c
 		linkModel.Status = types.StringValue(linkInfo.Status)
 		linkModel.ServiceName = types.StringValue(linkInfo.ServiceName)
 		objectType := types.ObjectType{AttrTypes: map[string]attr.Type{
-			"principle": types.StringType,
+			"principal": types.StringType,
 		}}
 		principleList := make([]model.AllowPrinciple, 0, len(*linkInfo.AllowedPrincipals))
 		if len(*linkInfo.AllowedPrincipals) > 0 {

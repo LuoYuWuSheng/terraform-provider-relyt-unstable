@@ -83,7 +83,7 @@ func (r *dwUserResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 	dwUserModel.ID = types.StringValue(relytAccount.Name)
-	diags = resp.State.Set(ctx, dwUserModel)
+	diags = resp.State.Set(ctx, &dwUserModel)
 	r.handleAccountConfig(ctx, &dwUserModel, regionUri, &resp.Diagnostics)
 	//if resp.Diagnostics.HasError() {
 	//这里注释掉主动回滚，应该由用户回滚
