@@ -103,12 +103,12 @@ func (r *dpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 			return
 		}
 	}
-	queryDpsMode, _ := WaitDpsReady(ctx, r.client, regionUri, dpsModel.DwsuId.ValueString(), dpsModel.ID.ValueString(), resp.Diagnostics)
+	WaitDpsReady(ctx, r.client, regionUri, dpsModel.DwsuId.ValueString(), dpsModel.ID.ValueString(), resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	relytQueryModel := queryDpsMode.(*client.DpsMode)
-	tflog.Info(ctx, "bizId:"+relytQueryModel.ID)
+	//relytQueryModel := queryDpsMode.(*client.DpsMode)
+	//tflog.Info(ctx, "bizId:"+relytQueryModel.ID)
 	// 将毫秒转换为秒和纳秒
 	//seconds := relytQueryModel.UpdateTime / 1000
 	//nanoseconds := (relytQueryModel.UpdateTime % 1000) * int64(time.Millisecond)
@@ -123,7 +123,7 @@ func (r *dpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tflog.Info(ctx, "create dps succ !"+relytQueryModel.ID)
+	//tflog.Info(ctx, "create dps succ !"+relytQueryModel.ID)
 }
 
 // Read resource information.
