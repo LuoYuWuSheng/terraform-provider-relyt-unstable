@@ -62,7 +62,8 @@ func (r *PrivateLinkResource) Create(ctx context.Context, req resource.CreateReq
 	//var plan tfModel.PrivateLinkModel
 	var plan model.PrivateLinkModel
 	diags := req.Plan.Get(ctx, &plan)
-	if diags.HasError() {
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 	dwsuId := plan.DwsuId.ValueString()
@@ -80,13 +81,14 @@ func (r *PrivateLinkResource) Create(ctx context.Context, req resource.CreateReq
 		_, err := r.client.CreatePrivateLinkService(ctx, regionUri, dwsuId, service)
 		if err != nil {
 			tflog.Error(ctx, "error create private link"+err.Error())
-			diags.AddError("create failed!", "failed to create private link!"+err.Error())
+			resp.Diagnostics.AddError("create failed!", "failed to create private link!"+err.Error())
 			return
 		}
 	}
 	//先写一下Status，下次读一下。如果有Status属性则创建一半
 	plan.Status = types.StringValue(client.PRIVATE_LINK_UNKNOWN)
 	diags = resp.State.Set(ctx, plan)
+	resp.Diagnostics.Append(diags...)
 	privateLinkInfo, err := common.TimeOutTask(r.client.CheckTimeOut, r.client.CheckInterval, func() (any, error) {
 		linkService, errGet := r.client.GetPrivateLinkService(ctx, regionUri, dwsuId, plan.ServiceType.ValueString())
 		if errGet != nil {
