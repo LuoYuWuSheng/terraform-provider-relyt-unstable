@@ -28,7 +28,7 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 		diagnostics.AddError("update dps failed!", "error update dps!"+err.Error())
 		return true
 	}
-	_, err = WaitDpsReady(ctx, relytClient, regionUri, dwsuId, dpsId, diagnostics)
+	_, err = WaitDpsReady(ctx, relytClient, regionUri, dwsuId, dpsId, &diagnostics)
 	if err != nil {
 		tflog.Error(ctx, "error wait dps ready after update"+err.Error())
 		diagnostics.AddError("update dps failed!", "error wait dps ready after update!"+err.Error())
@@ -38,7 +38,7 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 	return false
 }
 
-func WaitDpsReady(ctx context.Context, relytClient *client.RelytClient, regionUri string, dwsuId, dpsId string, diagnostics diag.Diagnostics) (any, error) {
+func WaitDpsReady(ctx context.Context, relytClient *client.RelytClient, regionUri string, dwsuId, dpsId string, diagnostics *diag.Diagnostics) (any, error) {
 	queryDpsMode, err := common.TimeOutTask(relytClient.CheckTimeOut, relytClient.CheckInterval, func() (any, error) {
 		dps, err2 := relytClient.GetDps(ctx, regionUri, dwsuId, dpsId)
 		if err2 != nil {

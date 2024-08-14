@@ -103,7 +103,7 @@ func (r *dpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 			return
 		}
 	}
-	WaitDpsReady(ctx, r.client, regionUri, dpsModel.DwsuId.ValueString(), dpsModel.ID.ValueString(), resp.Diagnostics)
+	_, _ = WaitDpsReady(ctx, r.client, regionUri, dpsModel.DwsuId.ValueString(), dpsModel.ID.ValueString(), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
