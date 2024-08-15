@@ -232,9 +232,6 @@ func (r *dwUserResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		err := r.client.DropAccount(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
 		return nil, err
 	})
-	if err != nil {
-		return
-	}
 	//err := r.client.DropAccount(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
 	if err != nil {
 		//要不要加error
