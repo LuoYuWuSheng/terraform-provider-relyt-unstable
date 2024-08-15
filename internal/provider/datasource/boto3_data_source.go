@@ -63,15 +63,19 @@ func (d *Boto3DataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	boto3AccessInfo, err := d.client.GetBoto3AccessInfo(ctx, meta.URI, state.DwsuId.ValueString(), state.DwUserId.ValueString())
+	boto3AccessInfo, err := common.CommonRetry(ctx, func() (*[]*client.Boto3AccessInfo, error) {
+		info, err := d.client.GetBoto3AccessInfo(ctx, meta.URI, state.DwsuId.ValueString(), state.DwUserId.ValueString())
+		return &info, err
+	})
+
 	if err != nil {
 		tflog.Error(ctx, "error read boto3 access info:"+err.Error())
 		resp.Diagnostics.AddError("read failed!", "error read boto3:"+err.Error())
 		return
 	}
-	if len(boto3AccessInfo) > 0 {
+	if boto3AccessInfo != nil && len(*boto3AccessInfo) > 0 {
 		var saList []model.Boto3AccessInfo
-		for _, boto3 := range boto3AccessInfo {
+		for _, boto3 := range *boto3AccessInfo {
 			saList = append(saList, model.Boto3AccessInfo{
 				AccessKeyId: types.StringValue(boto3.AccessKeyId),
 				AccessKey:   types.StringValue(boto3.AccessKey),

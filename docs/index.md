@@ -39,4 +39,4 @@ provider "relyt" {
 - `api_host` (String) target api address
 - `auth_key` (String, Sensitive) Your Console Auth Key! Can be set through env 'RELYT_AUTH_KEY'
 - `resource_check_interval` (Number) Interval second used in wait for cycle check! Defaults 5
-- `resource_check_timeout` (Number) Timeout second used in wait for create and delete dwsu or dps! Defaults 600
+- `resource_check_timeout` (Number) Timeout second used in wait for create and delete dwsu or dps! Defaults 1800

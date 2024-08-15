@@ -140,7 +140,10 @@ func (r *dpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 	regionUri := meta.URI
-	_, err := r.client.GetDps(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
+	_, err := common.CommonRetry(ctx, func() (*client.DpsMode, error) {
+		return r.client.GetDps(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
+	})
+	//_, err := r.client.GetDps(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
 	if err != nil {
 		tflog.Error(ctx, "error read dps"+err.Error())
 		return
@@ -189,7 +192,10 @@ func (r *dpsResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 	regionUri := meta.URI
 
-	err := r.client.DropDps(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
+	_, err := common.CommonRetry(ctx, func() (*string, error) {
+		err := r.client.DropDps(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
+		return nil, err
+	})
 	if err != nil {
 		tflog.Error(ctx, "error delete dps "+err.Error())
 		resp.Diagnostics.AddError(

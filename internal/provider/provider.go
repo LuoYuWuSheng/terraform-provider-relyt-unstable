@@ -88,7 +88,7 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 			},
 			"resource_check_timeout": schema.Int64Attribute{
 				Optional:    true,
-				Description: "Timeout second used in wait for create and delete dwsu or dps! Defaults 600",
+				Description: "Timeout second used in wait for create and delete dwsu or dps! Defaults 1800",
 			},
 			"resource_check_interval": schema.Int64Attribute{
 				Optional:    true,
@@ -159,7 +159,7 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		//apiHost的默认值
 		apiHost = "https://api.data.cloud"
 	}
-	resourceWaitTimeout := int64(600)
+	resourceWaitTimeout := int64(1800)
 	checkInterval := int32(5)
 	if !data.ResourceCheckTimeout.IsNull() {
 		tflog.Info(ctx, "resource check wait isn't null! set value:"+strconv.FormatInt(data.ResourceCheckTimeout.ValueInt64(), 10))
@@ -214,7 +214,7 @@ func (p *RelytProvider) Resources(ctx context.Context) []func() resource.Resourc
 		relytRS.NewDwsuResource,
 		relytRS.NewPrivateLinkResource,
 		relytRS.NewDwsuIntegrationInfoResource,
-		relytRS.NewTestResource,
+		//relytRS.NewTestResource,
 	}
 }
 

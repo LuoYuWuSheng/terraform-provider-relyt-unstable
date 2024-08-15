@@ -172,7 +172,10 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	relytQueryModel, err := r.client.GetDwsu(ctx, state.ID.ValueString())
+	relytQueryModel, err := common.CommonRetry(ctx, func() (*client.DwsuModel, error) {
+		return r.client.GetDwsu(ctx, state.ID.ValueString())
+	})
+
 	if err != nil {
 		tflog.Error(ctx, "error read dwsu"+err.Error())
 		return
@@ -220,8 +223,9 @@ func (r *dwsuResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			"Can't drop dwsu with unknown id! Please check your status! ")
 		return
 	}
-
-	dwsu, err := r.client.GetDwsu(ctx, state.ID.ValueString())
+	dwsu, err := common.CommonRetry(ctx, func() (*client.DwsuModel, error) {
+		return r.client.GetDwsu(ctx, state.ID.ValueString())
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get dwsu meta!", "Can't get dwsu info before drop it! err: "+err.Error())
 		return
@@ -233,7 +237,10 @@ func (r *dwsuResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	// Delete existing dwsu
-	err = r.client.DropDwsu(ctx, state.ID.ValueString())
+	_, err = common.CommonRetry(ctx, func() (*string, error) {
+		err = r.client.DropDwsu(ctx, state.ID.ValueString())
+		return nil, err
+	})
 	if err != nil {
 		//要不要加error
 		resp.Diagnostics.AddError(
