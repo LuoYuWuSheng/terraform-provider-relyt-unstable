@@ -10,8 +10,8 @@ import (
 	"terraform-provider-relyt/internal/provider/model"
 )
 
-func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan *model.Dps, diagnostics diag.Diagnostics, dwsuId, dpsId string) bool {
-	meta := common.RouteRegionUri(ctx, dwsuId, relytClient, &diagnostics)
+func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan *model.Dps, diagnostics *diag.Diagnostics, dwsuId, dpsId string) bool {
+	meta := common.RouteRegionUri(ctx, dwsuId, relytClient, diagnostics)
 	if diagnostics.HasError() {
 		return true
 	}
@@ -28,7 +28,7 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 		diagnostics.AddError("update dps failed!", "error update dps!"+err.Error())
 		return true
 	}
-	_, err = WaitDpsReady(ctx, relytClient, regionUri, dwsuId, dpsId, &diagnostics)
+	_, err = WaitDpsReady(ctx, relytClient, regionUri, dwsuId, dpsId, diagnostics)
 	if err != nil {
 		tflog.Error(ctx, "error wait dps ready after update"+err.Error())
 		diagnostics.AddError("update dps failed!", "error wait dps ready after update!"+err.Error())

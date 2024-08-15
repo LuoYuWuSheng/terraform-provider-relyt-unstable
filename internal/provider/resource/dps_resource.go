@@ -166,7 +166,7 @@ func (r *dpsResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	req.Plan.Get(ctx, &plan)
 	var state = model.DpsModel{}
 	req.State.Get(ctx, &state)
-	updateDps(ctx, r.client, &state.Dps, &plan.Dps, resp.Diagnostics, state.DwsuId.ValueString(), state.ID.ValueString())
+	updateDps(ctx, r.client, &state.Dps, &plan.Dps, &resp.Diagnostics, state.DwsuId.ValueString(), state.ID.ValueString())
 	if resp.Diagnostics.HasError() {
 		return
 	}

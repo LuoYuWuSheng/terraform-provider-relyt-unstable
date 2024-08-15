@@ -203,7 +203,7 @@ func (r *dwsuResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var state = model.DwsuModel{}
 	req.State.Get(ctx, &state)
 	if plan.DefaultDps.Size != state.DefaultDps.Size {
-		if updateDps(ctx, r.client, state.DefaultDps, plan.DefaultDps, resp.Diagnostics, state.ID.ValueString(), state.ID.ValueString()) {
+		if updateDps(ctx, r.client, state.DefaultDps, plan.DefaultDps, &resp.Diagnostics, state.ID.ValueString(), state.ID.ValueString()) {
 			return
 		}
 	}
