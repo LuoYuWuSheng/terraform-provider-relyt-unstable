@@ -142,9 +142,13 @@ func (r *dwsuResource) Create(ctx context.Context, req resource.CreateRequest, r
 		resp.State.Set(ctx, dwsuModel)
 	}
 	queryDwsuModel, err := WaitDwsuReady(ctx, r.client, dwsuModel.ID.ValueString())
-	if err != nil {
-		tflog.Error(ctx, "error wait dwsu ready"+err.Error())
-		resp.Diagnostics.AddError("create failed!", "error wait dwsu ready!"+err.Error())
+	if err != nil || queryDwsuModel == nil {
+		msg := "query dwsu failed! get null!"
+		if err != nil {
+			tflog.Error(ctx, "error wait dwsu ready"+err.Error())
+			msg = err.Error()
+		}
+		resp.Diagnostics.AddError("create failed!", "error wait dwsu ready!"+msg)
 		return
 		//fmt.Println(fmt.Sprintf("drop dwsu%s", err.Error()))
 	}
@@ -315,7 +319,7 @@ func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics
 		//tfDwsuModel.DefaultDps.DwsuId = types.StringValue(relytDwsuModel.ID)
 		//tfDwsuModel.DefaultDps.ID = types.StringValue(relytDwsuModel.ID)
 		var tfEndPoints []model.Endpoints
-		if len(relytDwsuModel.Endpoints) > 0 {
+		if relytDwsuModel.Endpoints != nil && len(relytDwsuModel.Endpoints) > 0 {
 			for _, endpoint := range relytDwsuModel.Endpoints {
 				tfEndpoint := model.Endpoints{
 					//Extensions: types.MapValue(types.StringType),
