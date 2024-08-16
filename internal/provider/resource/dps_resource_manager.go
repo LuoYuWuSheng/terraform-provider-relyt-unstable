@@ -38,9 +38,7 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 		return
 	}
 	_, err = WaitDpsReady(ctx, relytClient, regionUri, dwsuId, dpsId, diagnostics)
-	if err != nil {
-		tflog.Error(ctx, "error wait dps ready after update"+err.Error())
-		diagnostics.AddError("update dps failed!", "error wait dps ready after update!"+err.Error())
+	if diagnostics.HasError() {
 		return
 	}
 	//mapRelytDpsToTFModel(dps, state)
@@ -92,7 +90,7 @@ func WaitDpsReady(ctx context.Context, relytClient *client.RelytClient, regionUr
 	if err != nil {
 		tflog.Error(ctx, "error wait dps ready"+err.Error())
 		diagnostics.AddError(
-			"create dps failed!", "error wait dps ready! "+err.Error(),
+			"wait dps failed!", "error wait dps ready! "+err.Error(),
 		)
 		return nil, err
 		//fmt.Println(fmt.Sprintf("drop dwsu%s", err.Error()))
