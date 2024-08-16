@@ -49,6 +49,7 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 	if diagnostics.HasError() {
 		return
 	}
+	state.Status = types.StringValue(client.DPS_STATUS_READY)
 	//mapRelytDpsToTFModel(dps, state)
 	//更改成功，则将Size设置为目标Size
 	state.Size = plan.Size
