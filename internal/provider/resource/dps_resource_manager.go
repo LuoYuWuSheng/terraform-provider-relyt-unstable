@@ -24,11 +24,17 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 		Name:        plan.Name.ValueString(),
 		Spec:        &client.Spec{Name: plan.Size.ValueString()},
 	}
-	_, err := relytClient.PatchDps(ctx, regionUri, dwsuId, dpsId, patchDps)
-	if err != nil {
-		tflog.Error(ctx, "error update dps"+err.Error())
-		diagnostics.AddError("update dps failed!", "error update dps!"+err.Error())
+	dps := readDps(ctx, dwsuId, dpsId, relytClient, diagnostics, state)
+	if diagnostics.HasError() {
 		return
+	}
+	if dps.Spec == nil || (dps.Spec != nil && dps.Spec.Name != plan.Size.ValueString()) {
+		_, err := relytClient.PatchDps(ctx, regionUri, dwsuId, dpsId, patchDps)
+		if err != nil {
+			tflog.Error(ctx, "error update dps"+err.Error())
+			diagnostics.AddError("update dps failed!", "error update dps!"+err.Error())
+			return
+		}
 	}
 	//读一下最新状态，写入Status，告诉用户正在变配。注意这时候不能写size，否则会导致TF认为已经是目标Size不再重入到Update逻辑
 	readDps(ctx, dwsuId, dpsId, relytClient, diagnostics, state)
@@ -37,7 +43,7 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 	if diagnostics.HasError() {
 		return
 	}
-	_, err = WaitDpsReady(ctx, relytClient, regionUri, dwsuId, dpsId, diagnostics)
+	WaitDpsReady(ctx, relytClient, regionUri, dwsuId, dpsId, diagnostics)
 	if diagnostics.HasError() {
 		return
 	}
@@ -46,10 +52,10 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 	state.Size = plan.Size
 }
 
-func readDps(ctx context.Context, dwsuId, dpsId string, r *client.RelytClient, diagnostics *diag.Diagnostics, dpsModel *model.Dps) {
+func readDps(ctx context.Context, dwsuId, dpsId string, r *client.RelytClient, diagnostics *diag.Diagnostics, dpsModel *model.Dps) *client.DpsMode {
 	meta := common.RouteRegionUri(ctx, dwsuId, r, diagnostics)
 	if diagnostics.HasError() {
-		return
+		return nil
 	}
 	regionUri := meta.URI
 	dps, err := common.CommonRetry(ctx, func() (*client.DpsMode, error) {
@@ -63,9 +69,10 @@ func readDps(ctx context.Context, dwsuId, dpsId string, r *client.RelytClient, d
 		}
 		tflog.Error(ctx, "error read dps"+msg)
 		diagnostics.AddError("error read", "error read dps!"+msg)
-		return
+		return nil
 	}
 	mapRelytDpsToTFModel(dps, dpsModel)
+	return dps
 }
 
 func mapRelytDpsToTFModel(dps *client.DpsMode, dpsModel *model.Dps) {
