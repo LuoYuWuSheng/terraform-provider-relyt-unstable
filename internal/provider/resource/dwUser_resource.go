@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"strings"
 	"terraform-provider-relyt/internal/provider/client"
 	"terraform-provider-relyt/internal/provider/common"
 	tfModel "terraform-provider-relyt/internal/provider/model"
@@ -244,15 +245,20 @@ func (r *dwUserResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 func (r *dwUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
-	if req.ID == "" {
+
+	// Retrieve import ID and save to id attribute
+	idParts := strings.Split(req.ID, ",")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: account_name. Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: dwsu_id,account_name. Got: %q", req.ID),
 		)
 		return
 	}
-	resp.State.SetAttribute(ctx, path.Root("id"), req.ID)
-	resp.State.SetAttribute(ctx, path.Root("account_name"), req.ID)
+
+	resp.State.SetAttribute(ctx, path.Root("dwsu_id"), idParts[0])
+	resp.State.SetAttribute(ctx, path.Root("id"), idParts[1])
+	resp.State.SetAttribute(ctx, path.Root("account_name"), idParts[1])
 	//password，not show
 	resp.State.SetAttribute(ctx, path.Root("account_password"), types.StringNull())
 }
