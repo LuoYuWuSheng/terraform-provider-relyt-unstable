@@ -35,6 +35,8 @@ func updateDps(ctx context.Context, relytClient *client.RelytClient, state, plan
 			diagnostics.AddError("update dps failed!", "error update dps!"+err.Error())
 			return
 		}
+	} else {
+		tflog.Warn(ctx, "skip patch! target already match plan size")
 	}
 	//读一下最新状态，写入Status，告诉用户正在变配。注意这时候不能写size，否则会导致TF认为已经是目标Size不再重入到Update逻辑
 	readDps(ctx, dwsuId, dpsId, relytClient, diagnostics, state)
