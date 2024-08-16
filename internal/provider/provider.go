@@ -164,9 +164,9 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	if !data.ResourceCheckTimeout.IsNull() {
 		tflog.Info(ctx, "resource check wait isn't null! set value:"+strconv.FormatInt(data.ResourceCheckTimeout.ValueInt64(), 10))
 		resourceWaitTimeout = data.ResourceCheckTimeout.ValueInt64()
-		if resourceWaitTimeout < 500 {
-			resp.Diagnostics.AddAttributeError(path.Root("resource_check_timeout"), "invalid value", "shouldn't less than 500")
-		}
+		//if resourceWaitTimeout < 500 {
+		//	resp.Diagnostics.AddAttributeError(path.Root("resource_check_timeout"), "invalid value", "shouldn't less than 500")
+		//}
 	}
 	if !data.ResourceCheckInterval.IsNull() {
 		tflog.Info(ctx, "resource check wait isn't null! set value:"+strconv.FormatInt(data.ResourceCheckTimeout.ValueInt64(), 10))
