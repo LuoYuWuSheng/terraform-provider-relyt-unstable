@@ -63,6 +63,7 @@ func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 					"description": schema.StringAttribute{Optional: true, Description: "The description of the DPS cluster."},
 					"engine":      schema.StringAttribute{Required: true, Description: "The type of the DPS cluster. hybrid, extreme, vector"},
 					"size":        schema.StringAttribute{Required: true, Description: "The name of the DPS cluster specification."},
+					"status":      schema.StringAttribute{Computed: true, Description: "The status of the DPS cluster."},
 				},
 			},
 			"endpoints": schema.ListNestedAttribute{
@@ -155,6 +156,10 @@ func (r *dwsuResource) Create(ctx context.Context, req resource.CreateRequest, r
 	relytQueryModel := queryDwsuModel.(*client.DwsuModel)
 	r.mapRelytModelToTerraform(ctx, &resp.Diagnostics, &dwsuModel, relytQueryModel)
 	tflog.Info(ctx, "bizId:"+relytQueryModel.ID)
+	readDps(ctx, dwsuModel.ID.ValueString(), dwsuModel.ID.ValueString(), r.client, &resp.Diagnostics, dwsuModel.DefaultDps)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	//dwsuModel.LastUpdated = types.Int64Value(time.Now().UnixMilli())
 	//dwsuModel.Status = types.StringValue(relytQueryModel.Status)
 	// Set state to fully populated data
@@ -187,6 +192,10 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	//state.Status = types.StringValue(dwsu.Status)
 	// Set refreshed state
 	r.mapRelytModelToTerraform(ctx, &resp.Diagnostics, &state, relytQueryModel)
+	readDps(ctx, state.ID.ValueString(), state.ID.ValueString(), r.client, &resp.Diagnostics, state.DefaultDps)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -203,7 +212,10 @@ func (r *dwsuResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var state = model.DwsuModel{}
 	req.State.Get(ctx, &state)
 	if plan.DefaultDps.Size != state.DefaultDps.Size {
-		if updateDps(ctx, r.client, state.DefaultDps, plan.DefaultDps, &resp.Diagnostics, state.ID.ValueString(), state.ID.ValueString()) {
+		updateDps(ctx, r.client, state.DefaultDps, plan.DefaultDps, &resp.Diagnostics, state.ID.ValueString(), state.ID.ValueString())
+		//反馈给用户，当前dps状态
+		resp.State.Set(ctx, &state)
+		if resp.Diagnostics.HasError() {
 			return
 		}
 	}

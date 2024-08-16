@@ -50,6 +50,7 @@ func (r *dpsResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"description": schema.StringAttribute{Optional: true, Description: "The description of the DPS cluster."},
 			"engine":      schema.StringAttribute{Required: true, Description: "The type of the DPS cluster. enum:{extreme}"},
 			"size":        schema.StringAttribute{Required: true, Description: "The name of the DPS cluster specification."},
+			"status":      schema.StringAttribute{Computed: true, Description: "The status of the DPS cluster."},
 			//"last_updated": schema.StringAttribute{Computed: true},
 			//"status":       schema.StringAttribute{Computed: true},
 		},
@@ -103,21 +104,11 @@ func (r *dpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 			return
 		}
 	}
-	_, _ = WaitDpsReady(ctx, r.client, regionUri, dpsModel.DwsuId.ValueString(), dpsModel.ID.ValueString(), &resp.Diagnostics)
+	dps, _ := WaitDpsReady(ctx, r.client, regionUri, dpsModel.DwsuId.ValueString(), dpsModel.ID.ValueString(), &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	//relytQueryModel := queryDpsMode.(*client.DpsMode)
-	//tflog.Info(ctx, "bizId:"+relytQueryModel.ID)
-	// 将毫秒转换为秒和纳秒
-	//seconds := relytQueryModel.UpdateTime / 1000
-	//nanoseconds := (relytQueryModel.UpdateTime % 1000) * int64(time.Millisecond)
-
-	// 使用 time.Unix 函数创建 time.Time 对象
-	//t := time.Unix(seconds, nanoseconds)
-	//dpsModel.LastUpdated = types.StringValue(t.Format(time.RFC850))
-
-	// Set state to fully populated data
+	dpsModel.Status = types.StringValue(dps.Status)
 	diags = resp.State.Set(ctx, dpsModel)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -135,29 +126,17 @@ func (r *dpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	meta := common.RouteRegionUri(ctx, state.DwsuId.ValueString(), r.client, &resp.Diagnostics)
+	dwsuId := state.DwsuId.ValueString()
+	dpsId := state.ID.ValueString()
+	readDps(ctx, dwsuId, dpsId, r.client, &resp.Diagnostics, &state.Dps)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	regionUri := meta.URI
-	_, err := common.CommonRetry(ctx, func() (*client.DpsMode, error) {
-		return r.client.GetDps(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
-	})
-	//_, err := r.client.GetDps(ctx, regionUri, state.DwsuId.ValueString(), state.ID.ValueString())
-	if err != nil {
-		tflog.Error(ctx, "error read dps"+err.Error())
-		return
-	}
-	//state.Status = types.StringValue(dps.Status)
-	// Set refreshed state
-	//尝试修改其中某些属性，看terraform行为
-	//state.Description = types.StringValue("change desc")
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -167,11 +146,10 @@ func (r *dpsResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	var state = model.DpsModel{}
 	req.State.Get(ctx, &state)
 	updateDps(ctx, r.client, &state.Dps, &plan.Dps, &resp.Diagnostics, state.DwsuId.ValueString(), state.ID.ValueString())
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	//设置size
-	state.Size = plan.Size
+	//if resp.Diagnostics.HasError() {
+	//	return
+	//}
+	//写一下Status，反馈dps最新状态
 	resp.State.Set(ctx, &state)
 	return
 }

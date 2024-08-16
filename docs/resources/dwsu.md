@@ -61,6 +61,10 @@ Optional:
 
 - `description` (String) The description of the DPS cluster.
 
+Read-Only:
+
+- `status` (String) The status of the DPS cluster.
+
 
 <a id="nestedatt--endpoints"></a>
 ### Nested Schema for `endpoints`

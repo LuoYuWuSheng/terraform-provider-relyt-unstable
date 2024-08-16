@@ -28,6 +28,7 @@ type Dps struct {
 	Engine      types.String `tfsdk:"engine"`
 	Name        types.String `tfsdk:"name"`
 	Size        types.String `tfsdk:"size"`
+	Status      types.String `tfsdk:"status"`
 }
 
 type DwsuModel struct {

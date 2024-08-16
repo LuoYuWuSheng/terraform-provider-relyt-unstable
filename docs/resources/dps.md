@@ -39,3 +39,4 @@ resource "relyt_dps" "abc" {
 ### Read-Only
 
 - `id` (String) The ID of the DPS cluster.
+- `status` (String) The status of the DPS cluster.
