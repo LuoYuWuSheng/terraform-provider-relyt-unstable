@@ -41,7 +41,7 @@ func RetryFunction[T any](ctx context.Context, retryNum, intervalSecond int,
 		}
 		time.Sleep(time.Duration(intervalSecond))
 		intervalSecond = int(math.Ceil(backoffCoefficient * float64(intervalSecond)))
-		tflog.Warn(ctx, "retry failed func! backoff second:"+strconv.Itoa(intervalSecond)+"error msg!"+err.Error())
+		tflog.Warn(ctx, "retry failed func! backoff second: "+strconv.Itoa(intervalSecond)+" retry num:"+strconv.Itoa(i)+" error msg!"+err.Error())
 	}
 
 	return result, err
