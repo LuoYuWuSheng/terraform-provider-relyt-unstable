@@ -364,6 +364,26 @@ func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics
 			diagnostics.Append(d...)
 			tfDwsuModel.Endpoints = from
 		}
+
+		//only for import resource, fill property
+		if tfDwsuModel.Region.IsNull() || tfDwsuModel.Region.IsUnknown() {
+			//set empty object. let fellow fill property
+			tfDwsuModel.DefaultDps = &model.Dps{}
+			if relytDwsuModel.Region != nil {
+				tfDwsuModel.Region = types.StringValue(relytDwsuModel.Region.ID)
+				if relytDwsuModel.Region.Cloud != nil {
+					tfDwsuModel.Cloud = types.StringValue(relytDwsuModel.Region.Cloud.ID)
+				}
+			}
+			tfDwsuModel.Domain = types.StringValue(relytDwsuModel.Domain)
+			tfDwsuModel.Alias = types.StringValue(relytDwsuModel.Alias)
+			if relytDwsuModel.Edition != nil {
+				tfDwsuModel.Edition = types.StringValue(relytDwsuModel.Edition.ID)
+			}
+			if relytDwsuModel.Variant != nil {
+				tfDwsuModel.Variant = types.StringValue(relytDwsuModel.Variant.ID)
+			}
+		}
 	}
 }
 

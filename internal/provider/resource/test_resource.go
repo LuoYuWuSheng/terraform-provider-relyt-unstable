@@ -34,8 +34,9 @@ func (t TestList) name() {
 }
 
 type TestResource struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	ID       types.String `tfsdk:"id"`
+	Name     types.String `tfsdk:"name"`
+	Required types.String `tfsdk:"required"`
 	//mmm types.Map    `tfsdk:"mmm"`
 	//Mmm      types.Map  `tfsdk:"mmm"`
 	//TestList types.List `tfsdk:"self"`
@@ -57,8 +58,9 @@ func (r *testResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 	resp.Schema = schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"id":   schema.StringAttribute{Computed: true},
-			"name": schema.StringAttribute{Optional: true},
+			"id":       schema.StringAttribute{Computed: true},
+			"name":     schema.StringAttribute{Optional: true},
+			"required": schema.StringAttribute{Required: true},
 			//"mmm": schema.MapAttribute{Computed: true, ElementType: types.StringType},
 			//"self": schema.ListNestedAttribute{
 			//	Computed: true,
@@ -112,6 +114,8 @@ func (r *testResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	state.Required = types.StringValue("manual set when import")
 
 	//_, err := r.client.GetDwsu(ctx, state.ID.ValueString())
 	//if err != nil {

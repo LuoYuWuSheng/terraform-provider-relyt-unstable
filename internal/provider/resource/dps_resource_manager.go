@@ -80,10 +80,17 @@ func readDps(ctx context.Context, dwsuId, dpsId string, r *client.RelytClient, d
 
 func mapRelytDpsToTFModel(dps *client.DpsMode, dpsModel *model.Dps) {
 	if dps != nil && dpsModel != nil {
-		//注意，为了实现变配阻塞，自动重新发起变配，这里不能更新Size。由update判断是否更新成功后更新size
 		dpsModel.Status = types.StringValue(dps.Status)
-		if (dpsModel.Size.IsNull() || dpsModel.Size.IsUnknown()) && dps.Spec != nil {
-			dpsModel.Size = types.StringValue(dps.Spec.Name)
+
+		//========== 下面的入口为import导致的Required属性为空
+		//注意，为了实现变配阻塞，自动重新发起变配，这里只有states的size为空才更新Size（import的场景）。其他由update判断是否更新成功后更新size
+		if dpsModel.Size.IsNull() || dpsModel.Size.IsUnknown() {
+			if dps.Spec != nil {
+				dpsModel.Size = types.StringValue(dps.Spec.Name)
+			}
+			dpsModel.Name = types.StringValue(dps.Name)
+			dpsModel.Engine = types.StringValue(dps.Engine)
+			dpsModel.Description = types.StringValue(dps.Description)
 		}
 	}
 }
