@@ -194,6 +194,11 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	r.mapRelytModelToTerraform(ctx, &resp.Diagnostics, &state, relytQueryModel)
 	readDps(ctx, state.ID.ValueString(), state.ID.ValueString(), r.client, &resp.Diagnostics, state.DefaultDps)
 	if resp.Diagnostics.HasError() {
+		if relytQueryModel.Status != client.DPS_STATUS_READY {
+			//	dwsu not ready，throw warn rather error。avoid refresh block destroy
+			resp.Diagnostics = diag.Diagnostics{}
+			resp.Diagnostics.AddWarning("Skip Read", "DWSU status not Ready! Can't refresh state. now: "+relytQueryModel.Status)
+		}
 		return
 	}
 	diags = resp.State.Set(ctx, &state)
