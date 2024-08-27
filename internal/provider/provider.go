@@ -17,6 +17,9 @@ import (
 	"os"
 	"strconv"
 	"terraform-provider-relyt/internal/provider/client"
+	relytDS "terraform-provider-relyt/internal/provider/datasource"
+	"terraform-provider-relyt/internal/provider/model"
+	relytRS "terraform-provider-relyt/internal/provider/resource"
 )
 
 // Ensure RelytProvider satisfies various provider interfaces.
@@ -85,7 +88,7 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 			},
 			"resource_check_timeout": schema.Int64Attribute{
 				Optional:    true,
-				Description: "Timeout second used in wait for create and delete dwsu or dps! Defaults 600",
+				Description: "Timeout second used in wait for create and delete dwsu or dps! Defaults 1800",
 			},
 			"resource_check_interval": schema.Int64Attribute{
 				Optional:    true,
@@ -98,7 +101,7 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 // 读取配置文件
 func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 
-	var data RelytProviderModel
+	var data model.RelytProviderModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -156,14 +159,14 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		//apiHost的默认值
 		apiHost = "https://api.data.cloud"
 	}
-	resourceWaitTimeout := int64(600)
+	resourceWaitTimeout := int64(1800)
 	checkInterval := int32(5)
 	if !data.ResourceCheckTimeout.IsNull() {
 		tflog.Info(ctx, "resource check wait isn't null! set value:"+strconv.FormatInt(data.ResourceCheckTimeout.ValueInt64(), 10))
 		resourceWaitTimeout = data.ResourceCheckTimeout.ValueInt64()
-		if resourceWaitTimeout < 500 {
-			resp.Diagnostics.AddAttributeError(path.Root("resource_check_timeout"), "invalid value", "shouldn't less than 500")
-		}
+		//if resourceWaitTimeout < 500 {
+		//	resp.Diagnostics.AddAttributeError(path.Root("resource_check_timeout"), "invalid value", "shouldn't less than 500")
+		//}
 	}
 	if !data.ResourceCheckInterval.IsNull() {
 		tflog.Info(ctx, "resource check wait isn't null! set value:"+strconv.FormatInt(data.ResourceCheckTimeout.ValueInt64(), 10))
@@ -206,18 +209,20 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 
 func (p *RelytProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewdwUserResource,
-		NewDpsResource,
-		NewDwsuResource,
-		//NewTestResource,
+		relytRS.NewdwUserResource,
+		relytRS.NewDpsResource,
+		relytRS.NewDwsuResource,
+		relytRS.NewPrivateLinkResource,
+		relytRS.NewDwsuIntegrationInfoResource,
+		//relytRS.NewTestResource,
 	}
 }
 
 func (p *RelytProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	tflog.Info(ctx, "===== datasource get ")
 	return []func() datasource.DataSource{
-		NewServiceAccountDataSource,
-		NewBoto3DataSource,
+		//relytDS.NewServiceAccountDataSource,
+		relytDS.NewBoto3DataSource,
 	}
 }
 
