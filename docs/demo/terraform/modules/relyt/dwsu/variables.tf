@@ -12,7 +12,7 @@ variable "cloud" {
 
 variable "region" {
   type        = string
-  default     = "us-east-1"
+  default     = "ap-east-1"
   description = "Region"
 
 }
