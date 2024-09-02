@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"terraform-provider-relyt/internal/provider/client"
+	"terraform-provider-relyt/internal/provider/common"
+	"time"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -84,10 +86,20 @@ func (r *testResource) Create(ctx context.Context, req resource.CreateRequest, r
 	//if resp.Diagnostics.HasError() {
 	//	return
 	//}
-	tflog.Info(ctx, "pass Diagnostics")
 
 	//plan.Name = types.StringValue("set value")
 	plan.ID = types.StringValue("set values")
+	tflog.Info(ctx, "pass Diagnostics")
+	resp.State.Set(ctx, plan)
+
+	_, err := common.TimeOutTask(100000, 5, func() (any, error) {
+		time.Sleep(1)
+		return nil, fmt.Errorf("mock apiFail!")
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("error wait!", err.Error())
+		return
+	}
 	//一旦拿到ID立刻保存
 	//objectType := types.ObjectType{
 	//	map[string]attr.Type{
