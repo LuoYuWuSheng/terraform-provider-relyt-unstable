@@ -94,6 +94,10 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 				Optional:    true,
 				Description: "Interval second used in wait for cycle check! Defaults 5",
 			},
+			"client_timeout": schema.Int64Attribute{
+				Optional:    true,
+				Description: "http client timeout seconds! Defaults 10",
+			},
 		},
 	}
 }
@@ -161,6 +165,7 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	}
 	resourceWaitTimeout := int64(1800)
 	checkInterval := int32(5)
+	clientTimeout := int32(10)
 	if !data.ResourceCheckTimeout.IsNull() {
 		tflog.Info(ctx, "resource check wait isn't null! set value:"+strconv.FormatInt(data.ResourceCheckTimeout.ValueInt64(), 10))
 		resourceWaitTimeout = data.ResourceCheckTimeout.ValueInt64()
@@ -174,6 +179,13 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 			resp.Diagnostics.AddAttributeError(path.Root("resource_check_interval"), "invalid value", "should be grater than 5")
 		}
 		checkInterval = int32(data.ResourceCheckInterval.ValueInt64())
+	}
+	if !data.ClientTimeout.IsNull() {
+		tflog.Info(ctx, "client timeout isn't null! set value:"+strconv.FormatInt(data.ClientTimeout.ValueInt64(), 10))
+		if data.ResourceCheckInterval.ValueInt64() <= 1 || data.ResourceCheckInterval.ValueInt64() >= math.MaxInt32 {
+			resp.Diagnostics.AddAttributeError(path.Root("client_timeout"), "invalid value", "should be grater than 1")
+		}
+		checkInterval = int32(data.ClientTimeout.ValueInt64())
 	}
 
 	if resp.Diagnostics.HasError() {
@@ -192,6 +204,7 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 		Role:          roleId,
 		CheckTimeOut:  resourceWaitTimeout,
 		CheckInterval: checkInterval,
+		ClientTimeout: clientTimeout,
 	})
 	//relytClient.RelytClientConfig.RegionApi = data.RegionApi.ValueString()
 	if err != nil {

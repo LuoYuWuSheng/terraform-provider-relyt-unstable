@@ -25,6 +25,7 @@ type RelytClientConfig struct {
 	RegionApi     string `json:"regionApi"`
 	CheckTimeOut  int64  `json:"checkTimeOut"`
 	CheckInterval int32  `json:"checkInterval"`
+	ClientTimeout int32  `json:"clientTimeout"`
 }
 
 type RelytClient struct {
@@ -426,7 +427,7 @@ func doHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, host, p
 	}
 	requestString, _ := httputil.DumpRequestOut(req, true)
 	tflog.Info(ctx, "== request: "+string(requestString))
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := &http.Client{Timeout: time.Duration(p.ClientTimeout) * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		tflog.Error(ctx, "Error sending request:"+err.Error())

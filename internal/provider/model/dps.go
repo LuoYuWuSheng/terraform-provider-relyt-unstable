@@ -11,6 +11,7 @@ type RelytProviderModel struct {
 	Role                  types.String `tfsdk:"role"`
 	ResourceCheckTimeout  types.Int64  `tfsdk:"resource_check_timeout"`
 	ResourceCheckInterval types.Int64  `tfsdk:"resource_check_interval"`
+	ClientTimeout         types.Int64  `tfsdk:"client_timeout"`
 }
 type Endpoints struct {
 	Extensions types.Map    `tfsdk:"extensions"`
