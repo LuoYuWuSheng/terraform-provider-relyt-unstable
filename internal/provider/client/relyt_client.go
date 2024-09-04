@@ -19,6 +19,7 @@ type RelytClientConfig struct {
 	RegionApi                 string                     `json:"regionApi"`
 	CheckTimeOut              int64                      `json:"checkTimeOut"`
 	CheckInterval             int32                      `json:"checkInterval"`
+	ClientTimeout int32  `json:"clientTimeout"`
 	RelytDatabaseClientConfig *RelytDatabaseClientConfig `json:"relytDatabaseClientConfig"`
 }
 
