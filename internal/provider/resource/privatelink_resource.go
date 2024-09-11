@@ -48,10 +48,10 @@ func (r *PrivateLinkResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"allow_principals": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"principal": schema.StringAttribute{Optional: true, Description: "principal"},
+						"principal": schema.StringAttribute{Required: true, Description: "principal"},
 					},
 				},
-				Optional: true, Description: "allow principal"},
+				Required: true, Description: "allow principal"},
 		},
 	}
 }
