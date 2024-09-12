@@ -48,7 +48,7 @@ func (r *PrivateLinkResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"allow_principals": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"principal": schema.StringAttribute{Optional: true, Description: "principal"},
+						"principal": schema.StringAttribute{Required: true, Description: "principal"},
 					},
 				},
 				Optional: true, Description: "allow principal"},
@@ -244,18 +244,20 @@ func (r *PrivateLinkResource) mapRelytToTFModel(ctx context.Context, linkInfo *c
 		objectType := types.ObjectType{AttrTypes: map[string]attr.Type{
 			"principal": types.StringType,
 		}}
-		if linkInfo.AllowedPrincipals == nil {
-			linkInfo.AllowedPrincipals = new([]string)
+		if (linkInfo.AllowedPrincipals == nil || len(*linkInfo.AllowedPrincipals) == 0) && linkModel.AllowPrincipals.IsNull() {
+			return
 		}
-		principleList := make([]model.AllowPrinciple, 0, len(*linkInfo.AllowedPrincipals))
-		if len(*linkInfo.AllowedPrincipals) > 0 {
-			for _, allowPrinciple := range *linkInfo.AllowedPrincipals {
-				principleList = append(principleList, model.AllowPrinciple{Principal: types.StringValue(allowPrinciple)})
+		if linkInfo.AllowedPrincipals != nil {
+			principleList := make([]model.AllowPrinciple, 0, len(*linkInfo.AllowedPrincipals))
+			if len(*linkInfo.AllowedPrincipals) > 0 {
+				for _, allowPrinciple := range *linkInfo.AllowedPrincipals {
+					principleList = append(principleList, model.AllowPrinciple{Principal: types.StringValue(allowPrinciple)})
+				}
 			}
+			from, diagnostics := types.ListValueFrom(ctx, objectType, principleList)
+			diagnostics.Append(diagnostics...)
+			linkModel.AllowPrincipals = from
 		}
-		from, diagnostics := types.ListValueFrom(ctx, objectType, principleList)
-		diagnostics.Append(diagnostics...)
-		linkModel.AllowPrincipals = from
 	}
 }
 

@@ -42,6 +42,6 @@ resource "relyt_dwsu_privatelink" "privatelink" {
 <a id="nestedatt--allow_principals"></a>
 ### Nested Schema for `allow_principals`
 
-Optional:
+Required:
 
 - `principal` (String) principal
