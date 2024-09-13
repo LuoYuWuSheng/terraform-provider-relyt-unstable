@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"io/ioutil"
 	"net/http"
@@ -424,8 +425,13 @@ func doHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, host, p
 			req.Header.Set(k, v)
 		}
 	}
+	requestId := ""
+	requestUUID, uuidErr := uuid.NewUUID()
+	if uuidErr == nil {
+		requestId = requestUUID.String()
+	}
 	requestString, _ := httputil.DumpRequestOut(req, true)
-	tflog.Info(ctx, "== request: "+string(requestString))
+	tflog.Info(ctx, "== apiId : "+requestId+" request: "+string(requestString))
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -434,7 +440,7 @@ func doHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, host, p
 	}
 	defer resp.Body.Close()
 	responseString, _ := httputil.DumpResponse(resp, true)
-	tflog.Info(ctx, "== response: "+string(responseString))
+	tflog.Info(ctx, "== apiId : "+requestId+" response: "+string(responseString))
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		tflog.Error(ctx, "Error reading responseString body:"+err.Error())
