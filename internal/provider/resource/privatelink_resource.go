@@ -247,15 +247,34 @@ func (r *PrivateLinkResource) mapRelytToTFModel(ctx context.Context, linkInfo *c
 		if linkInfo.AllowedPrincipals == nil {
 			linkInfo.AllowedPrincipals = new([]string)
 		}
-		principleList := make([]model.AllowPrinciple, 0, len(*linkInfo.AllowedPrincipals))
-		if len(*linkInfo.AllowedPrincipals) > 0 {
-			for _, allowPrinciple := range *linkInfo.AllowedPrincipals {
-				principleList = append(principleList, model.AllowPrinciple{Principal: types.StringValue(allowPrinciple)})
+		readPrincipal := true
+		if len(*linkInfo.AllowedPrincipals) == len(linkModel.AllowPrincipals.Elements()) {
+			//为了保持客户端顺序，这里从服务端读取后判断一下是否长度一样，内容一样。如果不是则发生过变动需要更新
+			set := map[string]bool{}
+			for _, p := range *linkInfo.AllowedPrincipals {
+				set[p] = true
 			}
+			tmpService := client.PrivateLinkService{AllowedPrincipals: &[]string{}}
+			r.parsePrinciple(ctx, linkModel.AllowPrincipals, &tmpService)
+			for _, n := range *tmpService.AllowedPrincipals {
+				if _, exist := set[n]; !exist {
+					break
+				}
+			}
+			readPrincipal = false
+			return
 		}
-		from, diagnostics := types.ListValueFrom(ctx, objectType, principleList)
-		diagnostics.Append(diagnostics...)
-		linkModel.AllowPrincipals = from
+		if readPrincipal {
+			principleList := make([]model.AllowPrinciple, 0, len(*linkInfo.AllowedPrincipals))
+			if len(*linkInfo.AllowedPrincipals) > 0 {
+				for _, allowPrinciple := range *linkInfo.AllowedPrincipals {
+					principleList = append(principleList, model.AllowPrinciple{Principal: types.StringValue(allowPrinciple)})
+				}
+			}
+			from, diagnostics := types.ListValueFrom(ctx, objectType, principleList)
+			diagnostics.Append(diagnostics...)
+			linkModel.AllowPrincipals = from
+		}
 	}
 }
 
