@@ -49,8 +49,8 @@ func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"cloud":   schema.StringAttribute{Required: true, Description: "The ID of the cloud provider."},
 			"region":  schema.StringAttribute{Required: true, Description: "The ID of the region."},
 			"domain":  schema.StringAttribute{Required: true, Description: "The domain name of the service unit."},
-			"variant": schema.StringAttribute{Computed: true, Description: "The variables.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}, Default: stringdefault.StaticString("basic")},
-			"edition": schema.StringAttribute{Computed: true, Description: "The ID of the edition.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}, Default: stringdefault.StaticString("standard")},
+			"variant": schema.StringAttribute{Optional: true, Computed: true, Description: "The variables.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}, Default: stringdefault.StaticString("basic")},
+			"edition": schema.StringAttribute{Optional: true, Computed: true, Description: "The ID of the edition.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}, Default: stringdefault.StaticString("standard")},
 			"alias":   schema.StringAttribute{Optional: true, Description: "The alias of the service unit."},
 			//"last_updated": schema.Int64Attribute{Computed: true},
 			//"status":       schema.StringAttribute{Computed: true},
@@ -378,22 +378,26 @@ func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics
 
 		//only for import resource, fill property
 		if tfDwsuModel.Region.IsNull() || tfDwsuModel.Region.IsUnknown() {
-			//set empty object. let fellow fill property
+		}
+		//set empty object. let fellow fill property
+		if tfDwsuModel.DefaultDps == nil {
 			tfDwsuModel.DefaultDps = &model.Dps{}
-			if relytDwsuModel.Region != nil {
-				tfDwsuModel.Region = types.StringValue(relytDwsuModel.Region.ID)
-				if relytDwsuModel.Region.Cloud != nil {
-					tfDwsuModel.Cloud = types.StringValue(relytDwsuModel.Region.Cloud.ID)
-				}
+		}
+		if relytDwsuModel.Region != nil {
+			tfDwsuModel.Region = types.StringValue(relytDwsuModel.Region.ID)
+			if relytDwsuModel.Region.Cloud != nil {
+				tfDwsuModel.Cloud = types.StringValue(relytDwsuModel.Region.Cloud.ID)
 			}
+		}
+		if tfDwsuModel.Domain.IsNull() || tfDwsuModel.Domain.IsUnknown() {
 			tfDwsuModel.Domain = types.StringValue(relytDwsuModel.Domain)
-			tfDwsuModel.Alias = types.StringValue(relytDwsuModel.Alias)
-			if relytDwsuModel.Edition != nil {
-				tfDwsuModel.Edition = types.StringValue(relytDwsuModel.Edition.ID)
-			}
-			if relytDwsuModel.Variant != nil {
-				tfDwsuModel.Variant = types.StringValue(relytDwsuModel.Variant.ID)
-			}
+		}
+		tfDwsuModel.Alias = types.StringValue(relytDwsuModel.Alias)
+		if relytDwsuModel.Edition != nil {
+			tfDwsuModel.Edition = types.StringValue(relytDwsuModel.Edition.ID)
+		}
+		if relytDwsuModel.Variant != nil {
+			tfDwsuModel.Variant = types.StringValue(relytDwsuModel.Variant.ID)
 		}
 	}
 }
