@@ -134,7 +134,7 @@ func (r *PrivateLinkResource) Read(ctx context.Context, req resource.ReadRequest
 	retry, err := common.CommonRetry(ctx, func() (*client.PrivateLinkService, error) {
 		return r.client.GetPrivateLinkService(ctx, regionUri, dwsuId, state.ServiceType.ValueString())
 	})
-	if err != nil {
+	if err != nil || retry == nil {
 		resp.Diagnostics.AddError("error get private link", "get private link failed!"+err.Error())
 		return
 	}

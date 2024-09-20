@@ -195,9 +195,10 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	readDps(ctx, state.ID.ValueString(), state.ID.ValueString(), r.client, &resp.Diagnostics, state.DefaultDps)
 	if resp.Diagnostics.HasError() {
 		if relytQueryModel == nil {
-			//	dwsu not found，throw warn rather error。avoid refresh block destroy
+			//	dwsu not found，throw error will cause refresh failed! block destroy. but warning will make import sucess
+			//
 			resp.Diagnostics = diag.Diagnostics{}
-			resp.Diagnostics.AddWarning("Skip Read", "DWSU not found!")
+			resp.Diagnostics.AddError("Skip Read", "DWSU not found!")
 			return
 		}
 		if relytQueryModel.Status != client.DPS_STATUS_READY {

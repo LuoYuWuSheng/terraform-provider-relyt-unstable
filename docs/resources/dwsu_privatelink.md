@@ -42,3 +42,10 @@ resource "relyt_dwsu_privatelink" "privatelink" {
 Required:
 
 - `principal` (String) principal
+
+## Import
+
+Using `terraform import`, import instances using the `dwsu_id,service_type`. For example:
+```
+terraform import relyt_dwsu_privatelink.pl 1234567890,database
+```

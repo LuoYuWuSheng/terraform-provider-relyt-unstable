@@ -41,3 +41,11 @@ resource "relyt_dwuser" "user1" {
 ### Read-Only
 
 - `id` (String) The ID of the DW user.
+
+
+## Import
+
+Using `terraform import`, import user using the `dwsu_id,account_name`. For example:
+```
+terraform import relyt_dwuser.user-import 1234567890,user@zbyte-inc.com
+```

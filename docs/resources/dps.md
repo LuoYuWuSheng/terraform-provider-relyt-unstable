@@ -40,3 +40,11 @@ resource "relyt_dps" "abc" {
 
 - `id` (String) The ID of the DPS cluster.
 - `status` (String) The status of the DPS cluster.
+
+
+## Import
+
+Using `terraform import`, import instances using the `dwsu_id,dps_id`. For example:
+```
+terraform import relyt_dps.dps 1234567890,1234567890-1
+```
