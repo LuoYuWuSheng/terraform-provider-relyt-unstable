@@ -393,7 +393,10 @@ func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics
 		if tfDwsuModel.Domain.IsNull() || tfDwsuModel.Domain.IsUnknown() {
 			tfDwsuModel.Domain = types.StringValue(relytDwsuModel.Domain)
 		}
-		tfDwsuModel.Alias = types.StringValue(relytDwsuModel.Alias)
+		//go 默认string为空字符串。。对一个Optional字段设置空字符串和 不设置是不一样的
+		if relytDwsuModel.Alias != "" {
+			tfDwsuModel.Alias = types.StringValue(relytDwsuModel.Alias)
+		}
 		if relytDwsuModel.Edition != nil {
 			tfDwsuModel.Edition = types.StringValue(relytDwsuModel.Edition.ID)
 		}
