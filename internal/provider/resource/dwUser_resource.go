@@ -260,7 +260,7 @@ func (r *dwUserResource) ImportState(ctx context.Context, req resource.ImportSta
 	resp.State.SetAttribute(ctx, path.Root("id"), idParts[1])
 	resp.State.SetAttribute(ctx, path.Root("account_name"), idParts[1])
 	//password，not show
-	resp.State.SetAttribute(ctx, path.Root("account_password"), types.StringNull())
+	resp.State.SetAttribute(ctx, path.Root("account_password"), types.StringValue(""))
 }
 
 func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *tfModel.DWUserModel, regionUri string, diagnostics *diag.Diagnostics) {
