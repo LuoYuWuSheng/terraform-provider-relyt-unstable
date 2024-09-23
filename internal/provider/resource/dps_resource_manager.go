@@ -124,3 +124,28 @@ func WaitDpsReady(ctx context.Context, relytClient *client.RelytClient, regionUr
 	}
 	return convertType, err
 }
+
+func CheckDpsImport(ctx context.Context, relytClient *client.RelytClient, dwsuId, dpsId string, diagnostics *diag.Diagnostics) {
+	//限制dps状态
+	meta := common.RouteRegionUri(ctx, dwsuId, relytClient, diagnostics)
+	if diagnostics.HasError() {
+		return
+	}
+	regionUri := meta.URI
+	dps, err := common.CommonRetry(ctx, func() (*client.DpsMode, error) {
+		return relytClient.GetDps(ctx, regionUri, dwsuId, dpsId)
+	})
+	if dps == nil || err != nil {
+		errMsg := "dps not found!"
+		if err != nil {
+			errMsg = err.Error()
+		}
+		diagnostics.AddError("error to import", "msg: "+errMsg)
+		return
+	}
+	if dps.Status != client.DPS_STATUS_READY {
+		diagnostics.AddError("can't import", "dps isn't ready!")
+		return
+	}
+
+}

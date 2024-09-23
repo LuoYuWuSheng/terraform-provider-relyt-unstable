@@ -184,9 +184,9 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	relytQueryModel, err := common.CommonRetry(ctx, func() (*client.DwsuModel, error) {
 		return r.client.GetDwsu(ctx, state.ID.ValueString())
 	})
-
 	if err != nil {
-		tflog.Error(ctx, "error read dwsu"+err.Error())
+		resp.Diagnostics.AddError("error read dwsu", "msg: "+err.Error())
+		//tflog.Error(ctx, "error read dwsu"+err.Error())
 		return
 	}
 	//state.Status = types.StringValue(dwsu.Status)
@@ -321,7 +321,32 @@ func (r *dwsuResource) Configure(_ context.Context, req resource.ConfigureReques
 
 func (r *dwsuResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	//resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	//限制dwsu可以import的状态
+	dwsu, err := common.CommonRetry(ctx, func() (*client.DwsuModel, error) {
+		return r.client.GetDwsu(ctx, req.ID)
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("error read dwsu", "msg: "+err.Error())
+		//tflog.Error(ctx, "error read dwsu"+err.Error())
+		return
+	}
+	if dwsu == nil {
+		resp.Diagnostics = diag.Diagnostics{}
+		resp.Diagnostics.AddError("Can't import", "DWSU not found!")
+		return
+	}
+	if dwsu.Status != client.DPS_STATUS_READY {
+		resp.Diagnostics = diag.Diagnostics{}
+		resp.Diagnostics.AddError("Can't import", "DWSU status isn't ready!")
+		return
+	}
+	//校验dps状态
+	CheckDpsImport(ctx, r.client, req.ID, req.ID, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.State.SetAttribute(ctx, path.Root("id"), req.ID)
 }
 
 func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics *diag.Diagnostics, tfDwsuModel *model.DwsuModel, relytDwsuModel *client.DwsuModel) {
