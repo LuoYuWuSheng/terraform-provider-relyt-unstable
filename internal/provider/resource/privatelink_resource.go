@@ -232,8 +232,29 @@ func (r *PrivateLinkResource) ImportState(ctx context.Context, req resource.Impo
 		)
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("dwsu_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_type"), idParts[1])...)
+	dwsuId := idParts[0]
+	serviceType := idParts[1]
+	//是否可以import的校验
+	meta := common.RouteRegionUri(ctx, dwsuId, r.client, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	regionUri := meta.URI
+	privatelink, err := common.CommonRetry(ctx, func() (*client.PrivateLinkService, error) {
+		return r.client.GetPrivateLinkService(ctx, regionUri, dwsuId, serviceType)
+	})
+	if err != nil || privatelink == nil {
+		resp.Diagnostics.AddError("error get private link", "get private link failed!"+err.Error())
+		return
+	}
+	if privatelink.Status != client.PRIVATE_LINK_READY {
+		//4679805844736
+		resp.Diagnostics.AddError("error get private link", "private link is not ready! please check and wait")
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("dwsu_id"), dwsuId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_type"), serviceType)...)
 	//resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
