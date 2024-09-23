@@ -189,25 +189,25 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		//tflog.Error(ctx, "error read dwsu"+err.Error())
 		return
 	}
+	if relytQueryModel == nil {
+		//	dwsu not found，throw error will cause refresh failed! block destroy. but warning will make import sucess
+		//
+		resp.Diagnostics = diag.Diagnostics{}
+		resp.Diagnostics.AddError("Skip Read", "DWSU not found!")
+		return
+	}
 	//state.Status = types.StringValue(dwsu.Status)
 	// Set refreshed state
 	r.mapRelytModelToTerraform(ctx, &resp.Diagnostics, &state, relytQueryModel)
 	readDps(ctx, state.ID.ValueString(), state.ID.ValueString(), r.client, &resp.Diagnostics, state.DefaultDps)
-	if resp.Diagnostics.HasError() {
-		if relytQueryModel == nil {
-			//	dwsu not found，throw error will cause refresh failed! block destroy. but warning will make import sucess
-			//
-			resp.Diagnostics = diag.Diagnostics{}
-			resp.Diagnostics.AddError("Skip Read", "DWSU not found!")
-			return
-		}
-		if relytQueryModel.Status != client.DPS_STATUS_READY {
-			//	dwsu not ready，throw warn rather error。avoid refresh block destroy
-			resp.Diagnostics = diag.Diagnostics{}
-			resp.Diagnostics.AddWarning("Skip Read", "DWSU not found or status not Ready! Can't refresh state. now: "+relytQueryModel.Status)
-		}
-		return
-	}
+	//if resp.Diagnostics.HasError() {
+	//	if relytQueryModel.Status != client.DPS_STATUS_READY {
+	//		//	dwsu not ready，throw warn rather error。avoid refresh block destroy
+	//		resp.Diagnostics = diag.Diagnostics{}
+	//		resp.Diagnostics.AddWarning("Skip Read", "DWSU not found or status not Ready! Can't refresh state. now: "+relytQueryModel.Status)
+	//	}
+	//	return
+	//}
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -403,8 +403,8 @@ func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics
 		}
 
 		//only for import resource, fill property
-		if tfDwsuModel.Region.IsNull() || tfDwsuModel.Region.IsUnknown() {
-		}
+		//if tfDwsuModel.Region.IsNull() || tfDwsuModel.Region.IsUnknown() {
+		//}
 		//set empty object. let fellow fill property
 		if tfDwsuModel.DefaultDps == nil {
 			tfDwsuModel.DefaultDps = &model.Dps{}

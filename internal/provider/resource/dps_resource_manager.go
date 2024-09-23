@@ -88,11 +88,15 @@ func mapRelytDpsToTFModel(dps *client.DpsMode, dpsModel *model.Dps) {
 			if dps.Spec != nil {
 				dpsModel.Size = types.StringValue(dps.Spec.Name)
 			}
+		}
+		if dps.Name != "" {
 			dpsModel.Name = types.StringValue(dps.Name)
+		}
+		if dps.Engine != "" {
 			dpsModel.Engine = types.StringValue(dps.Engine)
-			if dps.Description != "" {
-				dpsModel.Description = types.StringValue(dps.Description)
-			}
+		}
+		if dps.Description != "" {
+			dpsModel.Description = types.StringValue(dps.Description)
 		}
 	}
 }
