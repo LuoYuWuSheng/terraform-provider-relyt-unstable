@@ -137,6 +137,17 @@ func TestCreateAccount(t *testing.T) {
 	fmt.Println("create result: " + string(marshal))
 }
 
+func TestGetAccount(t *testing.T) {
+	meta, err := client.GetOpenApiMeta(ctx, "aws", "us-east-1")
+	account, err := client.GetAccount(ctx, meta.URI, "4679805844736", "zhanlu@zbyte-inc.com")
+	if err != nil {
+		println("create account: " + err.Error())
+		return
+	}
+	marshal, err := json.Marshal(account)
+	fmt.Println("get account result: " + string(marshal))
+}
+
 func TestDropAccount(t *testing.T) {
 	err := client.DropAccount(ctx, client.RegionApi, "4954356420096", "edit123")
 	if err != nil {

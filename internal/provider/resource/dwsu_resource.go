@@ -323,6 +323,13 @@ func (r *dwsuResource) ImportState(ctx context.Context, req resource.ImportState
 	// Retrieve import ID and save to id attribute
 	//resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 	//限制dwsu可以import的状态
+	if req.ID == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: dwsu_id Got: %q", req.ID),
+		)
+		return
+	}
 	dwsu, err := common.CommonRetry(ctx, func() (*client.DwsuModel, error) {
 		return r.client.GetDwsu(ctx, req.ID)
 	})
