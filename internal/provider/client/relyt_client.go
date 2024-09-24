@@ -176,6 +176,16 @@ func (p *RelytClient) CreateAccount(ctx context.Context, regionUri string, dwsuI
 	return &resp, nil
 }
 
+func (p *RelytClient) GetAccount(ctx context.Context, regionUri string, dwsuId string, userId string) (*CommonRelytResponse[Account], error) {
+	path := fmt.Sprintf("/dwsu/%s/user/%s", dwsuId, url.PathEscape(userId))
+	resp := CommonRelytResponse[Account]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "GET", &resp, nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
 func (p *RelytClient) DropAccount(ctx context.Context, regionUri string, dwsuId string, userId string) error {
 	path := fmt.Sprintf("/dwsu/%s/user/%s", dwsuId, url.PathEscape(userId))
 	resp := CommonRelytResponse[string]{}

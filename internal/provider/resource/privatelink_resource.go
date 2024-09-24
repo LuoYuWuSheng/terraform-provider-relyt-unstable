@@ -244,7 +244,11 @@ func (r *PrivateLinkResource) ImportState(ctx context.Context, req resource.Impo
 		return r.client.GetPrivateLinkService(ctx, regionUri, dwsuId, serviceType)
 	})
 	if err != nil || privatelink == nil {
-		resp.Diagnostics.AddError("error get private link", "get private link failed!"+err.Error())
+		msg := "can't find private link!"
+		if err != nil {
+			msg = err.Error()
+		}
+		resp.Diagnostics.AddError("error get private link", "get private link failed! "+msg)
 		return
 	}
 	if privatelink.Status != client.PRIVATE_LINK_READY {
