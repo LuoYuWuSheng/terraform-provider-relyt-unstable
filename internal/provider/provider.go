@@ -214,6 +214,8 @@ func (p *RelytProvider) Resources(ctx context.Context) []func() resource.Resourc
 		relytRS.NewDwsuResource,
 		relytRS.NewPrivateLinkResource,
 		relytRS.NewDwsuIntegrationInfoResource,
+		relytRS.NewDwsuDatabaseResource,
+		relytRS.NewDwsuExternalSchemaResource,
 		//relytRS.NewTestResource,
 	}
 }
@@ -223,6 +225,10 @@ func (p *RelytProvider) DataSources(ctx context.Context) []func() datasource.Dat
 	return []func() datasource.DataSource{
 		//relytDS.NewServiceAccountDataSource,
 		relytDS.NewBoto3DataSource,
+		relytDS.NewDwsuDatabasesDataSource,
+		relytDS.NewDwsuDatabaseDetailDataSource,
+		relytDS.NewDwsuSchemasDataSource,
+		relytDS.NewDwsuSchemaDetailDataSource,
 	}
 }
 
