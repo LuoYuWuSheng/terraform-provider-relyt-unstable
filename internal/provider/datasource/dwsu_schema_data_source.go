@@ -22,7 +22,7 @@ type DwsuSchemaDetailDataSource struct {
 }
 
 func (d *DwsuSchemaDetailDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_dwsu_schema_detail"
+	resp.TypeName = req.ProviderTypeName + "_dwsu_schema"
 }
 
 // Schema defines the schema for the data source.

@@ -8,15 +8,19 @@ import (
 
 type Auth struct {
 	AccessKey types.String `tfsdk:"access_key"`
-	SecretKey types.String `tfsdk:"secret_key"`
+	//SecretKey types.String `tfsdk:"secret_key"`
+}
+
+type DataAccessConfig struct {
+	Auth Auth `tfsdk:"data_access_config"`
 }
 
 type DwsuDatabase struct {
-	Auth   Auth         `tfsdk:"auth"`
-	DwsuId types.String `tfsdk:"dwsu_id"`
-	ID     types.String `tfsdk:"id"`
-	Name   types.String `tfsdk:"name"`
-	Owner  types.String `tfsdk:"owner"`
+	//Auth   Auth         `tfsdk:"auth"`
+	//DwsuId types.String `tfsdk:"dwsu_id"`
+	ID    types.String `tfsdk:"id"`
+	Name  types.String `tfsdk:"name"`
+	Owner types.String `tfsdk:"owner"`
 }
 
 type DwsuExternalSchema struct {

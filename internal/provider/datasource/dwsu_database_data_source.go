@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"terraform-provider-relyt/internal/provider/model"
 )
 
@@ -22,20 +23,24 @@ type DwsuDatabaseDetailDataSource struct {
 }
 
 func (d *DwsuDatabaseDetailDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_dwsu_database_detail"
+	resp.TypeName = req.ProviderTypeName + "_dwsu_database"
 }
 
 // Schema defines the schema for the data source.
 func (d *DwsuDatabaseDetailDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"auth":    model.DatasourceAuthSchema,
-			"dwsu_id": schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
-			"id":      schema.StringAttribute{Required: true, Description: "The ID of the database."},
+			//"auth":    model.DatasourceAuthSchema,
+			//"dwsu_id": schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
+			"name": schema.StringAttribute{Required: true, Description: "The name of the database."},
 		},
 	}
 }
 
 // Read refreshes the Terraform state with the latest data.
 func (d *DwsuDatabaseDetailDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	config := model.DataAccessConfig{}
+	diag := req.ProviderMeta.Get(ctx, &config)
+	tflog.Info(ctx, "msg   "+config.Auth.AccessKey.ValueString())
+	resp.Diagnostics.Append(diag...)
 }

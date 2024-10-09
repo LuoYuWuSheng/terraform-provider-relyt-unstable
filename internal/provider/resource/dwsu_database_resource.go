@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"terraform-provider-relyt/internal/provider/model"
 )
 
@@ -36,11 +37,11 @@ func (r *DwsuDatabaseResource) Schema(_ context.Context, _ resource.SchemaReques
 	resp.Schema = schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"auth":    model.ResourceAuthSchema,
-			"dwsu_id": schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
-			"name":    schema.StringAttribute{Required: true, Description: "The Name of the database."},
-			"id":      schema.StringAttribute{Computed: true, Description: "The ID of the database."},
-			"owner":   schema.StringAttribute{Computed: true, Description: "The owner of the database."},
+			//"auth":    model.ResourceAuthSchema,
+			//"dwsu_id": schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
+			"name":  schema.StringAttribute{Required: true, Description: "The Name of the database."},
+			"id":    schema.StringAttribute{Computed: true, Description: "The ID of the database."},
+			"owner": schema.StringAttribute{Computed: true, Description: "The owner of the database."},
 		},
 	}
 }
@@ -53,10 +54,18 @@ func (r *DwsuDatabaseResource) Create(ctx context.Context, req resource.CreateRe
 	database.Owner = types.StringValue("mockOwner")
 	resp.Diagnostics.Append(diags...)
 	resp.State.Set(ctx, database)
+	config := model.DataAccessConfig{}
+	diag := req.ProviderMeta.Get(ctx, &config)
+	tflog.Info(ctx, "msg"+config.Auth.AccessKey.ValueString())
+	resp.Diagnostics.Append(diag...)
 }
 
 // Read resource information.
 func (r *DwsuDatabaseResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	config := model.DataAccessConfig{}
+	diag := req.ProviderMeta.Get(ctx, &config)
+	tflog.Info(ctx, "msg   "+config.Auth.AccessKey.ValueString())
+	resp.Diagnostics.Append(diag...)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
