@@ -3,6 +3,9 @@ module terraform-provider-relyt
 go 1.21
 
 require (
+	github.com/aws/aws-sdk-go-v2 v1.32.1
+	github.com/hashicorp/go-hclog v1.5.0
+	//github.com/aws/aws-sdk-go v1.55.5
 	github.com/hashicorp/terraform-plugin-docs v0.19.4
 	github.com/hashicorp/terraform-plugin-framework v1.11.0
 	//github.com/hashicorp/terraform-plugin-framework v1.9.0
@@ -14,8 +17,6 @@ require (
 
 //require github.com/hashicorp/go-hclog v1.6.3
 
-require github.com/hashicorp/go-hclog v1.5.0
-
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/Kunde21/markdownfmt/v3 v3.1.0 // indirect
@@ -25,6 +26,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/aws/smithy-go v1.22.0 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
