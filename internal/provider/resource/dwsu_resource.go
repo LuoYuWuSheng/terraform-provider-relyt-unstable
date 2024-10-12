@@ -49,8 +49,8 @@ func (r *dwsuResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"cloud":   schema.StringAttribute{Required: true, Description: "The ID of the cloud provider."},
 			"region":  schema.StringAttribute{Required: true, Description: "The ID of the region."},
 			"domain":  schema.StringAttribute{Required: true, Description: "The domain name of the service unit."},
-			"variant": schema.StringAttribute{Computed: true, Description: "The variables.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}, Default: stringdefault.StaticString("basic")},
-			"edition": schema.StringAttribute{Computed: true, Description: "The ID of the edition.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}, Default: stringdefault.StaticString("standard")},
+			"variant": schema.StringAttribute{Optional: true, Computed: true, Description: "The variables.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}, Default: stringdefault.StaticString("basic")},
+			"edition": schema.StringAttribute{Optional: true, Computed: true, Description: "The ID of the edition.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}, Default: stringdefault.StaticString("standard")},
 			"alias":   schema.StringAttribute{Optional: true, Description: "The alias of the service unit."},
 			//"last_updated": schema.Int64Attribute{Computed: true},
 			//"status":       schema.StringAttribute{Computed: true},
@@ -184,23 +184,30 @@ func (r *dwsuResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	relytQueryModel, err := common.CommonRetry(ctx, func() (*client.DwsuModel, error) {
 		return r.client.GetDwsu(ctx, state.ID.ValueString())
 	})
-
 	if err != nil {
-		tflog.Error(ctx, "error read dwsu"+err.Error())
+		resp.Diagnostics.AddError("error read dwsu", "msg: "+err.Error())
+		//tflog.Error(ctx, "error read dwsu"+err.Error())
+		return
+	}
+	if relytQueryModel == nil {
+		//	dwsu not found，throw error will cause refresh failed! block destroy. but warning will make import sucess
+		//
+		resp.Diagnostics = diag.Diagnostics{}
+		resp.Diagnostics.AddError("Skip Read", "DWSU not found!")
 		return
 	}
 	//state.Status = types.StringValue(dwsu.Status)
 	// Set refreshed state
 	r.mapRelytModelToTerraform(ctx, &resp.Diagnostics, &state, relytQueryModel)
 	readDps(ctx, state.ID.ValueString(), state.ID.ValueString(), r.client, &resp.Diagnostics, state.DefaultDps)
-	if resp.Diagnostics.HasError() {
-		if relytQueryModel.Status != client.DPS_STATUS_READY {
-			//	dwsu not ready，throw warn rather error。avoid refresh block destroy
-			resp.Diagnostics = diag.Diagnostics{}
-			resp.Diagnostics.AddWarning("Skip Read", "DWSU status not Ready! Can't refresh state. now: "+relytQueryModel.Status)
-		}
-		return
-	}
+	//if resp.Diagnostics.HasError() {
+	//	if relytQueryModel.Status != client.DPS_STATUS_READY {
+	//		//	dwsu not ready，throw warn rather error。avoid refresh block destroy
+	//		resp.Diagnostics = diag.Diagnostics{}
+	//		resp.Diagnostics.AddWarning("Skip Read", "DWSU not found or status not Ready! Can't refresh state. now: "+relytQueryModel.Status)
+	//	}
+	//	return
+	//}
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -314,7 +321,39 @@ func (r *dwsuResource) Configure(_ context.Context, req resource.ConfigureReques
 
 func (r *dwsuResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	//resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	//限制dwsu可以import的状态
+	if req.ID == "" {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: dwsu_id Got: %q", req.ID),
+		)
+		return
+	}
+	dwsu, err := common.CommonRetry(ctx, func() (*client.DwsuModel, error) {
+		return r.client.GetDwsu(ctx, req.ID)
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("error read dwsu", "msg: "+err.Error())
+		//tflog.Error(ctx, "error read dwsu"+err.Error())
+		return
+	}
+	if dwsu == nil {
+		resp.Diagnostics = diag.Diagnostics{}
+		resp.Diagnostics.AddError("Can't import", "DWSU not found!")
+		return
+	}
+	if dwsu.Status != client.DPS_STATUS_READY {
+		resp.Diagnostics = diag.Diagnostics{}
+		resp.Diagnostics.AddError("Can't import", "DWSU status isn't ready!")
+		return
+	}
+	//校验dps状态
+	CheckDpsImport(ctx, r.client, req.ID, req.ID, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.State.SetAttribute(ctx, path.Root("id"), req.ID)
 }
 
 func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics *diag.Diagnostics, tfDwsuModel *model.DwsuModel, relytDwsuModel *client.DwsuModel) {
@@ -371,23 +410,30 @@ func (r *dwsuResource) mapRelytModelToTerraform(ctx context.Context, diagnostics
 		}
 
 		//only for import resource, fill property
-		if tfDwsuModel.Region.IsNull() || tfDwsuModel.Region.IsUnknown() {
-			//set empty object. let fellow fill property
+		//if tfDwsuModel.Region.IsNull() || tfDwsuModel.Region.IsUnknown() {
+		//}
+		//set empty object. let fellow fill property
+		if tfDwsuModel.DefaultDps == nil {
 			tfDwsuModel.DefaultDps = &model.Dps{}
-			if relytDwsuModel.Region != nil {
-				tfDwsuModel.Region = types.StringValue(relytDwsuModel.Region.ID)
-				if relytDwsuModel.Region.Cloud != nil {
-					tfDwsuModel.Cloud = types.StringValue(relytDwsuModel.Region.Cloud.ID)
-				}
+		}
+		if relytDwsuModel.Region != nil {
+			tfDwsuModel.Region = types.StringValue(relytDwsuModel.Region.ID)
+			if relytDwsuModel.Region.Cloud != nil {
+				tfDwsuModel.Cloud = types.StringValue(relytDwsuModel.Region.Cloud.ID)
 			}
+		}
+		if tfDwsuModel.Domain.IsNull() || tfDwsuModel.Domain.IsUnknown() {
 			tfDwsuModel.Domain = types.StringValue(relytDwsuModel.Domain)
+		}
+		//go 默认string为空字符串。。对一个Optional字段设置空字符串和 不设置是不一样的
+		if relytDwsuModel.Alias != "" {
 			tfDwsuModel.Alias = types.StringValue(relytDwsuModel.Alias)
-			if relytDwsuModel.Edition != nil {
-				tfDwsuModel.Edition = types.StringValue(relytDwsuModel.Edition.ID)
-			}
-			if relytDwsuModel.Variant != nil {
-				tfDwsuModel.Variant = types.StringValue(relytDwsuModel.Variant.ID)
-			}
+		}
+		if relytDwsuModel.Edition != nil {
+			tfDwsuModel.Edition = types.StringValue(relytDwsuModel.Edition.ID)
+		}
+		if relytDwsuModel.Variant != nil {
+			tfDwsuModel.Variant = types.StringValue(relytDwsuModel.Variant.ID)
 		}
 	}
 }

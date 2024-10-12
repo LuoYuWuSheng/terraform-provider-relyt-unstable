@@ -255,12 +255,36 @@ func (r *dwUserResource) ImportState(ctx context.Context, req resource.ImportSta
 		)
 		return
 	}
+	dwsuId := idParts[0]
+	accountName := idParts[1]
 
-	resp.State.SetAttribute(ctx, path.Root("dwsu_id"), idParts[0])
-	resp.State.SetAttribute(ctx, path.Root("id"), idParts[1])
-	resp.State.SetAttribute(ctx, path.Root("account_name"), idParts[1])
+	meta := common.RouteRegionUri(ctx, dwsuId, r.client, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	regionUri := meta.URI
+	account, err := common.CommonRetry(ctx, func() (*client.Account, error) {
+		account, err := r.client.GetAccount(ctx, regionUri, dwsuId, accountName)
+		if err != nil {
+			return nil, err
+		}
+		return account.Data, nil
+	})
+	if err != nil || account == nil {
+		msg := "account not found!"
+		if err != nil {
+			msg = err.Error()
+		}
+		resp.Diagnostics.AddError("import account failed!", "error read account, "+msg)
+		return
+	}
+
+	resp.State.SetAttribute(ctx, path.Root("dwsu_id"), dwsuId)
+	resp.State.SetAttribute(ctx, path.Root("id"), accountName)
+	resp.State.SetAttribute(ctx, path.Root("account_name"), accountName)
 	//password，not show
-	resp.State.SetAttribute(ctx, path.Root("account_password"), types.StringNull())
+	resp.State.SetAttribute(ctx, path.Root("account_password"), types.StringValue(""))
+
 }
 
 func (r *dwUserResource) handleAccountConfig(ctx context.Context, dwUserModel *tfModel.DWUserModel, regionUri string, diagnostics *diag.Diagnostics) {

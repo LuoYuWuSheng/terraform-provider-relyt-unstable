@@ -27,12 +27,9 @@ resource "relyt_dwsu_privatelink" "privatelink" {
 
 ### Required
 
+- `allow_principals` (Attributes List) allow principal (see [below for nested schema](#nestedatt--allow_principals))
 - `dwsu_id` (String) dwsuid
 - `service_type` (String) (database | data_api | web_console)
-
-### Optional
-
-- `allow_principals` (Attributes List) allow principal (see [below for nested schema](#nestedatt--allow_principals))
 
 ### Read-Only
 
@@ -42,6 +39,13 @@ resource "relyt_dwsu_privatelink" "privatelink" {
 <a id="nestedatt--allow_principals"></a>
 ### Nested Schema for `allow_principals`
 
-Optional:
+Required:
 
 - `principal` (String) principal
+
+## Import
+
+Using `terraform import`, import instances using the `dwsu_id,service_type`. For example:
+```
+terraform import relyt_dwsu_privatelink.pl 1234567890,database
+```

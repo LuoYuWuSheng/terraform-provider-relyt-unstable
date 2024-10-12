@@ -83,13 +83,19 @@ func mapRelytDpsToTFModel(dps *client.DpsMode, dpsModel *model.Dps) {
 		dpsModel.Status = types.StringValue(dps.Status)
 
 		//========== 下面的入口为import导致的Required属性为空
-		//注意，为了实现变配阻塞，自动重新发起变配，这里只有states的size为空才更新Size（import的场景）。其他由update判断是否更新成功后更新size
-		if dpsModel.Size.IsNull() || dpsModel.Size.IsUnknown() {
+		//注意，为了实现变配阻塞，自动重新发起变配，这里只有states的size为空（import的场景）或者Dps状态为Ready才更新Size。其他由update判断是否更新成功后更新size
+		if dpsModel.Size.IsNull() || dpsModel.Size.IsUnknown() || dps.Status == client.DPS_STATUS_READY {
 			if dps.Spec != nil {
 				dpsModel.Size = types.StringValue(dps.Spec.Name)
 			}
+		}
+		if dps.Name != "" {
 			dpsModel.Name = types.StringValue(dps.Name)
+		}
+		if dps.Engine != "" {
 			dpsModel.Engine = types.StringValue(dps.Engine)
+		}
+		if dps.Description != "" {
 			dpsModel.Description = types.StringValue(dps.Description)
 		}
 	}
@@ -121,4 +127,29 @@ func WaitDpsReady(ctx context.Context, relytClient *client.RelytClient, regionUr
 		convertType = queryDpsMode.(*client.DpsMode)
 	}
 	return convertType, err
+}
+
+func CheckDpsImport(ctx context.Context, relytClient *client.RelytClient, dwsuId, dpsId string, diagnostics *diag.Diagnostics) {
+	//限制dps状态
+	meta := common.RouteRegionUri(ctx, dwsuId, relytClient, diagnostics)
+	if diagnostics.HasError() {
+		return
+	}
+	regionUri := meta.URI
+	dps, err := common.CommonRetry(ctx, func() (*client.DpsMode, error) {
+		return relytClient.GetDps(ctx, regionUri, dwsuId, dpsId)
+	})
+	if dps == nil || err != nil {
+		errMsg := "dps not found!"
+		if err != nil {
+			errMsg = err.Error()
+		}
+		diagnostics.AddError("error to import", "msg: "+errMsg)
+		return
+	}
+	if dps.Status != client.DPS_STATUS_READY {
+		diagnostics.AddError("can't import", "dps isn't ready!")
+		return
+	}
+
 }

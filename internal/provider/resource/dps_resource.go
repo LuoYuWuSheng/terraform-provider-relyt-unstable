@@ -213,6 +213,11 @@ func (r *dpsResource) ImportState(ctx context.Context, req resource.ImportStateR
 		)
 		return
 	}
+	//校验dps状态
+	CheckDpsImport(ctx, r.client, idParts[0], idParts[1], &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("dwsu_id"), idParts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), idParts[1])...)
 }

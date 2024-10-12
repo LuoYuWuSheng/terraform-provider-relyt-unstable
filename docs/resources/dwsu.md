@@ -40,13 +40,13 @@ resource "relyt_dwsu" "dwsu" {
 ### Optional
 
 - `alias` (String) The alias of the service unit.
+- `edition` (String) The ID of the edition.
+- `variant` (String) The variables.
 
 ### Read-Only
 
-- `edition` (String) The ID of the edition.
 - `endpoints` (Attributes List) endpoints of dwsu (see [below for nested schema](#nestedatt--endpoints))
 - `id` (String) The ID of the service unit.
-- `variant` (String) The variables.
 
 <a id="nestedatt--default_dps"></a>
 ### Nested Schema for `default_dps`
@@ -79,3 +79,10 @@ Read-Only:
 - `protocol` (String) The protocol used by the endpoint. enum: {HTTP, HTTPS, JDBC}
 - `type` (String) The type of the endpoint. enum: {openapi, web_console, database}
 - `uri` (String) The URI of the endpoint.
+
+## Import
+
+Using `terraform import`, import instances using the `id`. For example:
+```
+terraform import relyt_dwsu.dwsu 1234567890
+```

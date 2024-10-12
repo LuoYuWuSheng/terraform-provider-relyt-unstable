@@ -6,10 +6,32 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"math"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"terraform-provider-relyt/internal/provider/client"
 	"time"
 )
+
+// 创建一个通道来通知程序退出
+var Interrupted = make(chan bool, 1)
+
+func RegSignalHandler() {
+	// 创建一个通道来接收信号
+	sigs := make(chan os.Signal, 1)
+
+	// 注册要接收的信号
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	// 启动一个 goroutine 来处理信号
+	go func() {
+		sig := <-sigs
+		fmt.Println()
+		fmt.Println("received signal:", sig)
+		Interrupted <- true
+	}()
+}
 
 func RouteRegionUri(ctx context.Context, dwsuId string, relytClient *client.RelytClient,
 	diag *diag.Diagnostics) *client.OpenApiMetaInfo {
@@ -67,6 +89,9 @@ func TimeOutTask(timeoutSec int64, checkIntervalSec int32, task func() (any, err
 	//}
 	//go f
 	for {
+		if len(Interrupted) > 0 {
+			return nil, fmt.Errorf("interrupted by user")
+		}
 		select {
 		case <-ctx.Done():
 			fmt.Println("Task timed out")

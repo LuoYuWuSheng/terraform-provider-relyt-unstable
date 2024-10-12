@@ -48,10 +48,10 @@ func (r *PrivateLinkResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"allow_principals": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"principal": schema.StringAttribute{Optional: true, Description: "principal"},
+						"principal": schema.StringAttribute{Required: true, Description: "principal"},
 					},
 				},
-				Optional: true, Description: "allow principal"},
+				Required: true, Description: "allow principal"},
 		},
 	}
 }
@@ -134,7 +134,7 @@ func (r *PrivateLinkResource) Read(ctx context.Context, req resource.ReadRequest
 	retry, err := common.CommonRetry(ctx, func() (*client.PrivateLinkService, error) {
 		return r.client.GetPrivateLinkService(ctx, regionUri, dwsuId, state.ServiceType.ValueString())
 	})
-	if err != nil {
+	if err != nil || retry == nil {
 		resp.Diagnostics.AddError("error get private link", "get private link failed!"+err.Error())
 		return
 	}
@@ -232,8 +232,33 @@ func (r *PrivateLinkResource) ImportState(ctx context.Context, req resource.Impo
 		)
 		return
 	}
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("dwsu_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_type"), idParts[1])...)
+	dwsuId := idParts[0]
+	serviceType := idParts[1]
+	//是否可以import的校验
+	meta := common.RouteRegionUri(ctx, dwsuId, r.client, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	regionUri := meta.URI
+	privatelink, err := common.CommonRetry(ctx, func() (*client.PrivateLinkService, error) {
+		return r.client.GetPrivateLinkService(ctx, regionUri, dwsuId, serviceType)
+	})
+	if err != nil || privatelink == nil {
+		msg := "can't find private link!"
+		if err != nil {
+			msg = err.Error()
+		}
+		resp.Diagnostics.AddError("error get private link", "get private link failed! "+msg)
+		return
+	}
+	if privatelink.Status != client.PRIVATE_LINK_READY {
+		//4679805844736
+		resp.Diagnostics.AddError("error get private link", "private link is not ready! please check and wait")
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("dwsu_id"), dwsuId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_type"), serviceType)...)
 	//resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
@@ -247,15 +272,34 @@ func (r *PrivateLinkResource) mapRelytToTFModel(ctx context.Context, linkInfo *c
 		if linkInfo.AllowedPrincipals == nil {
 			linkInfo.AllowedPrincipals = new([]string)
 		}
-		principleList := make([]model.AllowPrinciple, 0, len(*linkInfo.AllowedPrincipals))
-		if len(*linkInfo.AllowedPrincipals) > 0 {
-			for _, allowPrinciple := range *linkInfo.AllowedPrincipals {
-				principleList = append(principleList, model.AllowPrinciple{Principal: types.StringValue(allowPrinciple)})
+		readPrincipal := true
+		if len(*linkInfo.AllowedPrincipals) == len(linkModel.AllowPrincipals.Elements()) {
+			//为了保持客户端顺序，这里从服务端读取后判断一下是否长度一样，内容一样。如果不是则发生过变动需要更新
+			set := map[string]bool{}
+			for _, p := range *linkInfo.AllowedPrincipals {
+				set[p] = true
 			}
+			tmpService := client.PrivateLinkService{AllowedPrincipals: &[]string{}}
+			r.parsePrinciple(ctx, linkModel.AllowPrincipals, &tmpService)
+			for _, n := range *tmpService.AllowedPrincipals {
+				if _, exist := set[n]; !exist {
+					break
+				}
+			}
+			readPrincipal = false
+			return
 		}
-		from, diagnostics := types.ListValueFrom(ctx, objectType, principleList)
-		diagnostics.Append(diagnostics...)
-		linkModel.AllowPrincipals = from
+		if readPrincipal {
+			principleList := make([]model.AllowPrinciple, 0, len(*linkInfo.AllowedPrincipals))
+			if len(*linkInfo.AllowedPrincipals) > 0 {
+				for _, allowPrinciple := range *linkInfo.AllowedPrincipals {
+					principleList = append(principleList, model.AllowPrinciple{Principal: types.StringValue(allowPrinciple)})
+				}
+			}
+			from, diagnostics := types.ListValueFrom(ctx, objectType, principleList)
+			diagnostics.Append(diagnostics...)
+			linkModel.AllowPrincipals = from
+		}
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"io/ioutil"
 	"net/http"
@@ -169,6 +170,16 @@ func (p *RelytClient) CreateAccount(ctx context.Context, regionUri string, dwsuI
 	path := fmt.Sprintf("/dwsu/%s/account", dwsuId)
 	resp := CommonRelytResponse[string]{}
 	err := doHttpRequest(p, ctx, regionUri, path, "POST", &resp, account, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+func (p *RelytClient) GetAccount(ctx context.Context, regionUri string, dwsuId string, userId string) (*CommonRelytResponse[Account], error) {
+	path := fmt.Sprintf("/dwsu/%s/user/%s", dwsuId, url.PathEscape(userId))
+	resp := CommonRelytResponse[Account]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "GET", &resp, nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -424,8 +435,13 @@ func doHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, host, p
 			req.Header.Set(k, v)
 		}
 	}
+	requestId := ""
+	requestUUID, uuidErr := uuid.NewUUID()
+	if uuidErr == nil {
+		requestId = requestUUID.String()
+	}
 	requestString, _ := httputil.DumpRequestOut(req, true)
-	tflog.Info(ctx, "== request: "+string(requestString))
+	tflog.Info(ctx, "== apiId : "+requestId+" request: "+string(requestString))
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -434,7 +450,7 @@ func doHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, host, p
 	}
 	defer resp.Body.Close()
 	responseString, _ := httputil.DumpResponse(resp, true)
-	tflog.Info(ctx, "== response: "+string(responseString))
+	tflog.Info(ctx, "== apiId : "+requestId+" response: "+string(responseString))
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		tflog.Error(ctx, "Error reading responseString body:"+err.Error())
