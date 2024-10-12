@@ -5,7 +5,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"terraform-provider-relyt/internal/provider/client"
+	"terraform-provider-relyt/internal/provider/common"
 	"terraform-provider-relyt/internal/provider/model"
 )
 
@@ -36,22 +38,20 @@ func (r *DwsuExternalSchemaResource) Schema(_ context.Context, _ resource.Schema
 	resp.Schema = schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"auth":          model.ResourceAuthSchema,
-			"dwsu_id":       schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
-			"name":          schema.StringAttribute{Required: true, Description: "The Name of the schema."},
-			"database_name": schema.StringAttribute{Required: true, Description: "The Name of the database."},
-			"id":            schema.StringAttribute{Computed: true, Description: "The ID of the database."},
-
-			"properties": schema.SingleNestedAttribute{
-				Optional: true,
-				Computed: true,
-				Attributes: map[string]schema.Attribute{
-					"metastore_type":           schema.StringAttribute{Computed: true, Optional: true, Description: "metastore_type", Default: stringdefault.StaticString("Glue")},
-					"table_format":             schema.StringAttribute{Computed: true, Optional: true, Description: "table_format", Default: stringdefault.StaticString("DELTA")},
-					"glue_access_control_mode": schema.StringAttribute{Computed: true, Optional: true, Description: "glue_access_control_mode", Default: stringdefault.StaticString("Lake Formation")},
-					"glue_region":              schema.StringAttribute{Computed: true, Optional: true, Description: "glue_region", Default: stringdefault.StaticString("ap-east-1")},
-					"s3_region":                schema.StringAttribute{Computed: true, Optional: true, Description: "s3_region", Default: stringdefault.StaticString("ap-east-1")},
-				},
+			"name":         schema.StringAttribute{Required: true, Description: "The Name of the schema."},
+			"catalog":      schema.StringAttribute{Required: true, Description: "The Name of the catalog."},
+			"database":     schema.StringAttribute{Required: true, Description: "The Name of the database."},
+			"table_format": schema.StringAttribute{Required: true, Description: "table_format"},
+			"properties": schema.MapAttribute{
+				ElementType: types.StringType,
+				Required:    true,
+				//Computed:    true,
+				//Attributes: map[string]schema.Attribute{
+				//	"metastore":                schema.StringAttribute{Computed: true, Optional: true, Description: "metastore", Default: stringdefault.StaticString("Glue")},
+				//	"glue_access_control_mode": schema.StringAttribute{Computed: true, Optional: true, Description: "glue_access_control_mode", Default: stringdefault.StaticString("Lake Formation")},
+				//	"glue_region":              schema.StringAttribute{Computed: true, Optional: true, Description: "glue_region", Default: stringdefault.StaticString("ap-east-1")},
+				//	"s3_region":                schema.StringAttribute{Computed: true, Optional: true, Description: "s3_region", Default: stringdefault.StaticString("ap-east-1")},
+				//},
 				Description: "The properties of the schema."},
 		},
 	}
@@ -62,20 +62,105 @@ func (r *DwsuExternalSchemaResource) Create(ctx context.Context, req resource.Cr
 	externalSchema := model.DwsuExternalSchema{}
 	diags := req.Plan.Get(ctx, &externalSchema)
 	resp.Diagnostics.Append(diags...)
-	externalSchema.ID = externalSchema.Name
+	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	//properties := map[string]string{}
+	dbSchema := client.Schema{
+		Database:    externalSchema.Database.ValueString(),
+		Catalog:     externalSchema.Catalog.ValueString(),
+		Name:        externalSchema.Name.ValueString(),
+		Properties:  externalSchema.Properties,
+		TableFormat: externalSchema.TableFormat.ValueString(),
+	}
+	_, err := dbClient.CreateExternalSchema(ctx, dbSchema)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to create schema", "error to create schema:"+err.Error())
+		return
+	}
 	resp.State.Set(ctx, externalSchema)
 }
 
 // Read resource information.
 func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	externalSchema := model.DwsuExternalSchema{}
+	diags := req.State.Get(ctx, &externalSchema)
+	resp.Diagnostics.Append(diags...)
+	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	dbSchema := client.Schema{
+		Database:    externalSchema.Database.ValueString(),
+		Catalog:     externalSchema.Catalog.ValueString(),
+		Name:        externalSchema.Name.ValueString(),
+		Properties:  externalSchema.Properties,
+		TableFormat: externalSchema.TableFormat.ValueString(),
+	}
+	getExternalSchema, err := common.CommonRetry(ctx, func() (*client.SchemaMeta, error) {
+		return dbClient.GetExternalSchema(ctx, dbSchema)
+	})
+	if err != nil || getExternalSchema == nil {
+		msg := "get schema nil"
+		if err != nil {
+			msg = err.Error()
+		}
+		resp.Diagnostics.AddError("Failed to create schema", "error to create schema:"+msg)
+		return
+	}
+	resp.State.Set(ctx, externalSchema)
+	//todo 这里没读取？
+	//if getExternalSchema.pro{
+	//
+	//}
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *DwsuExternalSchemaResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	resp.Diagnostics.AddWarning("Not Support！", "database not support update! please rollback your change")
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *DwsuExternalSchemaResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	externalSchema := model.DwsuExternalSchema{}
+	diags := req.State.Get(ctx, &externalSchema)
+	resp.Diagnostics.Append(diags...)
+	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	dbSchema := client.Schema{
+		Database:    externalSchema.Database.ValueString(),
+		Catalog:     externalSchema.Catalog.ValueString(),
+		Name:        externalSchema.Name.ValueString(),
+		Properties:  externalSchema.Properties,
+		TableFormat: externalSchema.TableFormat.ValueString(),
+	}
+
+	getExternalSchema, err := common.CommonRetry(ctx, func() (*client.SchemaMeta, error) {
+		return dbClient.GetExternalSchema(ctx, dbSchema)
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to read schema", "error to read schema before drop! :"+err.Error())
+		return
+	}
+	if getExternalSchema == nil {
+		return
+	}
+
+	succ, err := common.CommonRetry(ctx, func() (*bool, error) {
+		dropSchema, err := dbClient.DropSchema(ctx, dbSchema)
+		return &dropSchema, err
+	})
+	if err != nil || succ == nil || *succ != true {
+		msg := "drop schema return false"
+		if err != nil {
+			msg = err.Error()
+		}
+		resp.Diagnostics.AddError("Failed to drop schema", "error to droop schema:"+msg)
+		return
+	}
 }
 
 func (r *DwsuExternalSchemaResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

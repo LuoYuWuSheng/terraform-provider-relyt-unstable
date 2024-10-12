@@ -1,18 +1,12 @@
 package client
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"io/ioutil"
-	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"strconv"
-	"time"
 )
 
 func NewRelytClient(config RelytClientConfig) (RelytClient, error) {
@@ -383,13 +377,6 @@ func (p *RelytClient) PatchIntegration(ctx context.Context, regionUri, dwService
 	return &resp, nil
 }
 
-func doHttpRequest[T any](p *RelytClient, ctx context.Context, host, path, method string,
-	respMode *CommonRelytResponse[T],
-	request any,
-	parameter map[string]string,
-	codeHandler func(response *CommonRelytResponse[T], respDumpByte []byte) (*CommonRelytResponse[T], error)) (err error) {
-	return doHttpRequestWithHeader(p, ctx, host, path, method, respMode, request, parameter, nil, codeHandler)
-}
 
 func doHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, host, path, method string,
 	respMode *CommonRelytResponse[T],

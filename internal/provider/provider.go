@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/metaschema"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -25,6 +26,7 @@ import (
 // Ensure RelytProvider satisfies various provider interfaces.
 var _ provider.Provider = &RelytProvider{}
 var _ provider.ProviderWithFunctions = &RelytProvider{}
+var _ provider.ProviderWithMetaSchema = &RelytProvider{}
 
 // RelytProvider defines the provider implementation.
 type RelytProvider struct {
@@ -61,6 +63,22 @@ var (
 func (p *RelytProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "relyt"
 	resp.Version = p.version
+}
+
+func (p *RelytProvider) MetaSchema(ctx context.Context, request provider.MetaSchemaRequest, response *provider.MetaSchemaResponse) {
+	response.Schema = metaschema.Schema{
+		Attributes: map[string]metaschema.Attribute{
+			"data_access_config": schema.SingleNestedAttribute{
+				Optional:    true,
+				Description: "data_access_configs",
+				Attributes: map[string]schema.Attribute{
+					"access_key": schema.StringAttribute{Required: true, Description: "access Key"},
+					"secret_key": schema.StringAttribute{Required: true, Description: "secret Key"},
+					"endpoint":   schema.StringAttribute{Required: true, Description: "data access endpoint"},
+				},
+			},
+		},
+	}
 }
 
 // 定义provider能接受的参数，类型，是否可选等
