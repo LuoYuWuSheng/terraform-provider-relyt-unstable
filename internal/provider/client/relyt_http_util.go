@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"io/ioutil"
 	"net/http"
@@ -183,8 +184,13 @@ func signedHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, hos
 		}
 	}
 
+	requestId := ""
+	requestUUID, uuidErr := uuid.NewUUID()
+	if uuidErr == nil {
+		requestId = requestUUID.String()
+	}
 	requestString, _ := httputil.DumpRequestOut(req, true)
-	tflog.Info(ctx, "== request: "+string(requestString))
+	tflog.Info(ctx, "== apiId : "+requestId+" request: "+string(requestString))
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -193,7 +199,7 @@ func signedHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, hos
 	}
 	defer resp.Body.Close()
 	responseString, _ := httputil.DumpResponse(resp, true)
-	tflog.Info(ctx, "== response: "+string(responseString))
+	tflog.Info(ctx, "== apiId : "+requestId+" response: "+string(responseString))
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		tflog.Error(ctx, "Error reading responseString body:"+err.Error())
