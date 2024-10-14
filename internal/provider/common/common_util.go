@@ -111,7 +111,7 @@ func TimeOutTask(timeoutSec int64, checkIntervalSec int32, task func() (any, err
 }
 
 func ParseAccessConfig(ctx context.Context, meta tfsdk.Config, diag *diag.Diagnostics) *client.RelytDatabaseClient {
-	config := model.DataAccessConfig{}
+	config := model.OptionalProviderConfig{}
 	diags := meta.Get(ctx, &config)
 	tflog.Info(ctx, "msg"+config.Auth.AccessKey.ValueString())
 	diag.Append(diags...)

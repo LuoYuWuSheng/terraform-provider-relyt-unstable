@@ -4,14 +4,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type Auth struct {
+type DataAccessConfig struct {
 	AccessKey types.String `tfsdk:"access_key"`
 	SecretKey types.String `tfsdk:"secret_key"`
 	Endpoint  types.String `tfsdk:"endpoint"`
 }
 
-type DataAccessConfig struct {
-	Auth Auth `tfsdk:"data_access_config"`
+type OptionalProviderConfig struct {
+	Auth DataAccessConfig `tfsdk:"data_access_config"`
 }
 
 type DwsuExternalSchema struct {
