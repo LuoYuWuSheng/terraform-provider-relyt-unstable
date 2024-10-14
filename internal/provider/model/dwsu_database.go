@@ -5,14 +5,15 @@ import (
 )
 
 type DataAccessConfig struct {
-	AccessKey types.String `tfsdk:"access_key"`
-	SecretKey types.String `tfsdk:"secret_key"`
-	Endpoint  types.String `tfsdk:"endpoint"`
+	AccessKey     types.String `tfsdk:"access_key"`
+	SecretKey     types.String `tfsdk:"secret_key"`
+	Endpoint      types.String `tfsdk:"endpoint"`
+	ClientTimeout types.Int32  `tfsdk:"client_timeout"`
 }
 
-type OptionalProviderConfig struct {
-	Auth DataAccessConfig `tfsdk:"data_access_config"`
-}
+//type OptionalProviderConfig struct {
+//	Auth DataAccessConfig `tfsdk:"data_access_config"`
+//}
 
 type DwsuExternalSchema struct {
 	Name        types.String      `tfsdk:"name"`

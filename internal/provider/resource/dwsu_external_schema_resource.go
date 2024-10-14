@@ -62,7 +62,7 @@ func (r *DwsuExternalSchemaResource) Create(ctx context.Context, req resource.Cr
 	externalSchema := model.DwsuExternalSchema{}
 	diags := req.Plan.Get(ctx, &externalSchema)
 	resp.Diagnostics.Append(diags...)
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, r.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -87,7 +87,7 @@ func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.Read
 	externalSchema := model.DwsuExternalSchema{}
 	diags := req.State.Get(ctx, &externalSchema)
 	resp.Diagnostics.Append(diags...)
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, r.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -102,7 +102,7 @@ func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.Read
 		return dbClient.GetExternalSchema(ctx, dbSchema)
 	})
 	if err != nil || getExternalSchema == nil {
-		msg := "get schema nil"
+		msg := " schema not found!"
 		if err != nil {
 			msg = err.Error()
 		}
@@ -126,7 +126,7 @@ func (r *DwsuExternalSchemaResource) Delete(ctx context.Context, req resource.De
 	externalSchema := model.DwsuExternalSchema{}
 	diags := req.State.Get(ctx, &externalSchema)
 	resp.Diagnostics.Append(diags...)
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, r.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

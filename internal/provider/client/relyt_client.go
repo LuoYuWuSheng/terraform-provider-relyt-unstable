@@ -13,12 +13,13 @@ func NewRelytClient(config RelytClientConfig) (RelytClient, error) {
 }
 
 type RelytClientConfig struct {
-	ApiHost       string `json:"apiHost"`
-	AuthKey       string `json:"authKey"`
-	Role          string `json:"role"`
-	RegionApi     string `json:"regionApi"`
-	CheckTimeOut  int64  `json:"checkTimeOut"`
-	CheckInterval int32  `json:"checkInterval"`
+	ApiHost                   string                     `json:"apiHost"`
+	AuthKey                   string                     `json:"authKey"`
+	Role                      string                     `json:"role"`
+	RegionApi                 string                     `json:"regionApi"`
+	CheckTimeOut              int64                      `json:"checkTimeOut"`
+	CheckInterval             int32                      `json:"checkInterval"`
+	RelytDatabaseClientConfig *RelytDatabaseClientConfig `json:"relytDatabaseClientConfig"`
 }
 
 type RelytClient struct {

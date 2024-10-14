@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"syscall"
 	"terraform-provider-relyt/internal/provider/client"
-	"terraform-provider-relyt/internal/provider/model"
 	"time"
 )
 
@@ -110,16 +109,16 @@ func TimeOutTask(timeoutSec int64, checkIntervalSec int32, task func() (any, err
 	}
 }
 
-func ParseAccessConfig(ctx context.Context, meta tfsdk.Config, diag *diag.Diagnostics) *client.RelytDatabaseClient {
-	config := model.OptionalProviderConfig{}
-	diags := meta.Get(ctx, &config)
-	tflog.Info(ctx, "msg"+config.Auth.AccessKey.ValueString())
-	diag.Append(diags...)
-	databaseClient, err := client.NewRelytDatabaseClient(client.RelytDatabaseClientConfig{
-		DmsHost:   config.Auth.Endpoint.ValueString(),
-		AccessKey: config.Auth.AccessKey.ValueString(),
-		SecretKey: config.Auth.SecretKey.ValueString(),
-	})
+func ParseAccessConfig(ctx context.Context, relytClient *client.RelytClient, meta tfsdk.Config, diag *diag.Diagnostics) *client.RelytDatabaseClient {
+	//config := model.OptionalProviderConfig{}
+	//diags := meta.Get(ctx, &config)
+	//tflog.Info(ctx, "msg"+config.Auth.AccessKey.ValueString())
+	//diag.Append(diags...)
+	if relytClient == nil || relytClient.RelytDatabaseClientConfig == nil {
+		diag.AddError("Missing provider data_access_config", "please supply and  check your data access config!")
+		return nil
+	}
+	databaseClient, err := client.NewRelytDatabaseClient(*relytClient.RelytDatabaseClientConfig)
 	if err != nil {
 		diag.AddError("ProviderMeta parse error", "error parse data access config! "+err.Error())
 	}

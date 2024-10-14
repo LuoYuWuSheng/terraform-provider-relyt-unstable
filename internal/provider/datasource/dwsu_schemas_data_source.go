@@ -54,7 +54,7 @@ func (d *DwsuSchemasDataSource) Read(ctx context.Context, req datasource.ReadReq
 	diags := req.Config.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, d.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
