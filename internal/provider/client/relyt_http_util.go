@@ -128,7 +128,7 @@ func signedHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, hos
 	request any,
 	parameter map[string]string,
 	header map[string]string,
-	aksk *RelytDatabaseClientConfig,
+	databaseClientConfig *RelytDatabaseClientConfig,
 	codeHandler func(response *CommonRelytResponse[T], respDumpByte []byte) (*CommonRelytResponse[T], error)) (err error) {
 	if host == "" {
 		host = p.ApiHost
@@ -176,11 +176,15 @@ func signedHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, hos
 			req.Header.Set(k, v)
 		}
 	}
-	if aksk != nil {
-		err = AwsSignHttp(aksk, req, jsonData)
+	clientTimeout := time.Duration(p.ClientTimeout) * time.Second
+	if databaseClientConfig != nil {
+		err = AwsSignHttp(databaseClientConfig, req, jsonData)
 		if err != nil {
 			tflog.Error(ctx, "error sign request"+err.Error())
 			return err
+		}
+		if databaseClientConfig.ClientTimeout > 0 {
+			clientTimeout = time.Duration(databaseClientConfig.ClientTimeout) * time.Second
 		}
 	}
 
@@ -191,7 +195,7 @@ func signedHttpRequestWithHeader[T any](p *RelytClient, ctx context.Context, hos
 	}
 	requestString, _ := httputil.DumpRequestOut(req, true)
 	tflog.Info(ctx, "== apiId : "+requestId+" request: "+string(requestString))
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := &http.Client{Timeout: clientTimeout}
 	resp, err := client.Do(req)
 	if err != nil {
 		tflog.Error(ctx, "Error sending request:"+err.Error())
