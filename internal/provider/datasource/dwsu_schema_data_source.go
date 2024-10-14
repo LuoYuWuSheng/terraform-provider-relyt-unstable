@@ -43,7 +43,7 @@ func (d *DwsuSchemaDetailDataSource) Schema(_ context.Context, _ datasource.Sche
 
 // Read refreshes the Terraform state with the latest data.
 func (d *DwsuSchemaDetailDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, d.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -51,7 +51,7 @@ func (d *DwsuSchemaDetailDataSource) Read(ctx context.Context, req datasource.Re
 	diags := req.Config.Get(ctx, &tfSchema)
 	resp.Diagnostics.Append(diags...)
 
-	schema, err := common.CommonRetry(ctx, func() (*client.SchemaMeta, error) {
+	schemaMeta, err := common.CommonRetry(ctx, func() (*client.SchemaMeta, error) {
 		return dbClient.GetExternalSchema(ctx, client.Schema{
 			Database: tfSchema.Database.ValueString(),
 			Catalog:  tfSchema.Catalog.ValueString(),
@@ -70,9 +70,12 @@ func (d *DwsuSchemaDetailDataSource) Read(ctx context.Context, req datasource.Re
 	//	"name":  types.StringType,
 	//	"owner": types.StringType,
 	//}}
-	if schema != nil {
-		tfSchema.Owner = types.StringValue(schema.Owner)
-		tfSchema.External = types.BoolValue(schema.External)
+	if schemaMeta != nil {
+		tfSchema.Owner = types.StringValue(schemaMeta.Owner)
+		tfSchema.External = types.BoolValue(schemaMeta.External)
+	} else {
+		resp.Diagnostics.AddError("Schema Not Found", "please check whether it exist!")
+		return
 	}
 	resp.State.Set(ctx, tfSchema)
 }

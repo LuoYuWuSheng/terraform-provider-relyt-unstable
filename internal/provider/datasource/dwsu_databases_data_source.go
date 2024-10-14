@@ -48,7 +48,7 @@ func (d *DwsuDatabasesDataSource) Schema(_ context.Context, _ datasource.SchemaR
 
 // Read refreshes the Terraform state with the latest data.
 func (d *DwsuDatabasesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, d.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

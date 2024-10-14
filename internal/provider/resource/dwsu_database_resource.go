@@ -53,7 +53,10 @@ func (r *DwsuDatabaseResource) Create(ctx context.Context, req resource.CreateRe
 	if diags.HasError() {
 		return
 	}
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, r.client, req.ProviderMeta, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	createDatabase, err := dbClient.CreateDatabase(ctx, client.Database{
 		Name: database.Name.ValueString(),
 	})
@@ -69,7 +72,7 @@ func (r *DwsuDatabaseResource) Create(ctx context.Context, req resource.CreateRe
 // Read resource information.
 func (r *DwsuDatabaseResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Info(ctx, "try read")
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, r.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -80,7 +83,7 @@ func (r *DwsuDatabaseResource) Read(ctx context.Context, req resource.ReadReques
 		return dbClient.GetDatabase(ctx, database.Name.ValueString())
 	})
 	if err != nil || getDatabase == nil {
-		msg := "get database nil"
+		msg := " database not found!"
 		if err != nil {
 			msg = err.Error()
 		}
@@ -98,7 +101,7 @@ func (r *DwsuDatabaseResource) Update(ctx context.Context, req resource.UpdateRe
 
 // Delete deletes the resource and removes the Terraform state on success.
 func (r *DwsuDatabaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	dbClient := common.ParseAccessConfig(ctx, req.ProviderMeta, &resp.Diagnostics)
+	dbClient := common.ParseAccessConfig(ctx, r.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

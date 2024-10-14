@@ -13,9 +13,10 @@ type RelytDatabaseClient struct {
 }
 
 type RelytDatabaseClientConfig struct {
-	DmsHost   string `json:"apiHost"`
-	AccessKey string `json:"accessKey"`
-	SecretKey string `json:"secretKey"`
+	DmsHost       string `json:"apiHost"`
+	AccessKey     string `json:"accessKey"`
+	SecretKey     string `json:"secretKey"`
+	ClientTimeout int32  `json:"clientTimeout"`
 }
 
 func (r *RelytDatabaseClient) CreateDatabase(ctx context.Context, database Database) (*Database, error) {

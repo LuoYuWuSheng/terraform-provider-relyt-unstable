@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
-	"github.com/hashicorp/terraform-plugin-framework/provider/metaschema"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -66,19 +65,20 @@ func (p *RelytProvider) Metadata(ctx context.Context, req provider.MetadataReque
 }
 
 func (p *RelytProvider) MetaSchema(ctx context.Context, request provider.MetaSchemaRequest, response *provider.MetaSchemaResponse) {
-	response.Schema = metaschema.Schema{
-		Attributes: map[string]metaschema.Attribute{
-			"data_access_config": schema.SingleNestedAttribute{
-				Optional:    true,
-				Description: "data_access_configs",
-				Attributes: map[string]schema.Attribute{
-					"access_key": schema.StringAttribute{Required: true, Description: "access Key"},
-					"secret_key": schema.StringAttribute{Required: true, Description: "secret Key"},
-					"endpoint":   schema.StringAttribute{Required: true, Description: "data access endpoint"},
-				},
-			},
-		},
-	}
+	//response.Schema = metaschema.Schema{
+	//	Attributes: map[string]metaschema.Attribute{
+	//		"data_access_config": schema.SingleNestedAttribute{
+	//			Optional:    true,
+	//			Description: "data_access_configs",
+	//			Attributes: map[string]schema.Attribute{
+	//				"access_key":     schema.StringAttribute{Required: true, Description: "access Key"},
+	//				"secret_key":     schema.StringAttribute{Required: true, Description: "secret Key"},
+	//				"endpoint":       schema.StringAttribute{Required: true, Description: "data access endpoint"},
+	//				"client_timeout": schema.Int32Attribute{Optional: true, Description: "client timeout seconds! default 10s"},
+	//			},
+	//		},
+	//	},
+	//}
 }
 
 // 定义provider能接受的参数，类型，是否可选等
@@ -111,6 +111,16 @@ func (p *RelytProvider) Schema(ctx context.Context, req provider.SchemaRequest, 
 			"resource_check_interval": schema.Int64Attribute{
 				Optional:    true,
 				Description: "Interval second used in wait for cycle check! Defaults 5",
+			},
+			"data_access_config": schema.SingleNestedAttribute{
+				Optional:    true,
+				Description: "data_access_configs",
+				Attributes: map[string]schema.Attribute{
+					"access_key":     schema.StringAttribute{Required: true, Description: "access Key"},
+					"secret_key":     schema.StringAttribute{Required: true, Description: "secret Key"},
+					"endpoint":       schema.StringAttribute{Required: true, Description: "data access endpoint"},
+					"client_timeout": schema.Int32Attribute{Optional: true, Description: "client timeout seconds! default 10s"},
+				},
 			},
 		},
 	}
@@ -204,13 +214,25 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	tflog.Info(ctx, fmt.Sprintf(" host: %s auth: %s, role: %s  check timeout: %d interval: %d",
 		apiHost, authKey, data.Role.ValueString(), resourceWaitTimeout, checkInterval))
 	roleId := data.Role.ValueString()
-	relytClient, err := client.NewRelytClient(client.RelytClientConfig{
+	clientConfig := client.RelytClientConfig{
 		ApiHost:       apiHost,
 		AuthKey:       authKey,
 		Role:          roleId,
 		CheckTimeOut:  resourceWaitTimeout,
 		CheckInterval: checkInterval,
-	})
+	}
+	if data.DataAccessConfig != nil {
+		clientConfig.RelytDatabaseClientConfig = &client.RelytDatabaseClientConfig{
+			DmsHost:       data.DataAccessConfig.Endpoint.ValueString(),
+			AccessKey:     data.DataAccessConfig.AccessKey.ValueString(),
+			SecretKey:     data.DataAccessConfig.SecretKey.ValueString(),
+			ClientTimeout: 10,
+		}
+		if !data.DataAccessConfig.ClientTimeout.IsNull() && !data.DataAccessConfig.ClientTimeout.IsUnknown() {
+			clientConfig.RelytDatabaseClientConfig.ClientTimeout = data.DataAccessConfig.ClientTimeout.ValueInt32()
+		}
+	}
+	relytClient, err := client.NewRelytClient(clientConfig)
 	//relytClient.RelytClientConfig.RegionApi = data.RegionApi.ValueString()
 	if err != nil {
 		resp.Diagnostics.AddError(
