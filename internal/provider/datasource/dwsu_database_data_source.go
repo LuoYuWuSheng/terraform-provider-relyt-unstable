@@ -68,5 +68,5 @@ func (d *DwsuDatabaseDetailDataSource) Read(ctx context.Context, req datasource.
 		resp.Diagnostics.AddError("Database Not Found", "please check whether it exist!")
 		return
 	}
-	resp.State.Set(ctx, database)
+	resp.State.Set(ctx, &tfDatabase)
 }
