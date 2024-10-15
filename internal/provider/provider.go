@@ -241,7 +241,7 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 			SecretKey:     data.DataAccessConfig.SecretKey.ValueString(),
 			ClientTimeout: 10,
 		}
-		if !data.DataAccessConfig.ClientTimeout.IsUnknown() {
+		if !data.DataAccessConfig.ClientTimeout.IsNull() {
 			dataAccessClientTimeOut := data.DataAccessConfig.ClientTimeout.ValueInt32()
 			if dataAccessClientTimeOut <= 0 {
 				resp.Diagnostics.AddError("wrong data_access_config config!", " client_timeout must greater than 0")
