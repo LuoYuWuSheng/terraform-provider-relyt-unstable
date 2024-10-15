@@ -38,5 +38,20 @@ provider "relyt" {
 
 - `api_host` (String) target api address
 - `auth_key` (String, Sensitive) Your Console Auth Key! Can be set through env 'RELYT_AUTH_KEY'
+- `client_timeout` (Number) http client timeout seconds! Defaults 10
+- `data_access_config` (Attributes) data_access_configs (see [below for nested schema](#nestedatt--data_access_config))
 - `resource_check_interval` (Number) Interval second used in wait for cycle check! Defaults 5
 - `resource_check_timeout` (Number) Timeout second used in wait for create and delete dwsu or dps! Defaults 1800
+
+<a id="nestedatt--data_access_config"></a>
+### Nested Schema for `data_access_config`
+
+Required:
+
+- `access_key` (String) access Key
+- `endpoint` (String) data access endpoint
+- `secret_key` (String) secret Key
+
+Optional:
+
+- `client_timeout` (Number) client timeout seconds! default 10s

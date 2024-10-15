@@ -106,7 +106,7 @@ func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.Read
 		if err != nil {
 			msg = err.Error()
 		}
-		resp.Diagnostics.AddError("Failed to create schema", "error to create schema:"+msg)
+		resp.Diagnostics.AddError("Failed to Read schema", "error to Read schema:"+msg)
 		return
 	}
 	resp.State.Set(ctx, externalSchema)
@@ -118,7 +118,7 @@ func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.Read
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *DwsuExternalSchemaResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddWarning("Not Support！", "database not support update! please rollback your change")
+	resp.Diagnostics.AddWarning("Not Support！", "schema not support update! please rollback your change")
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -158,7 +158,7 @@ func (r *DwsuExternalSchemaResource) Delete(ctx context.Context, req resource.De
 		if err != nil {
 			msg = err.Error()
 		}
-		resp.Diagnostics.AddError("Failed to drop schema", "error to droop schema:"+msg)
+		resp.Diagnostics.AddError("Failed to drop schema", "error to drop schema:"+msg)
 		return
 	}
 }

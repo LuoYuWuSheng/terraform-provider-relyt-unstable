@@ -39,7 +39,7 @@ func (r *DwsuDatabaseResource) Schema(_ context.Context, _ resource.SchemaReques
 	resp.Schema = schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"name":  schema.StringAttribute{Required: true, Description: "The Name of the database."},
+			"name":  schema.StringAttribute{Required: true, Description: "The Name of the database. The name contains a maximum of 127 characters"},
 			"owner": schema.StringAttribute{Computed: true, Description: "The owner of the database."},
 		},
 	}
