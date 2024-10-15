@@ -118,7 +118,7 @@ func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.Read
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *DwsuExternalSchemaResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddWarning("Not Support！", "database not support update! please rollback your change")
+	resp.Diagnostics.AddWarning("Not Support！", "schema not support update! please rollback your change")
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
