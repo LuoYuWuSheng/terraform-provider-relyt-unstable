@@ -78,8 +78,8 @@ func (d *DwsuSchemasDataSource) Read(ctx context.Context, req datasource.ReadReq
 		listRecords, err := common.CommonRetry(ctx, func() (*client.CommonPage[client.SchemaMeta], error) {
 			schemas, err := dbClient.ListSchemas(ctx, client.SchemaPageQuery{
 				PageQuery: client.PageQuery{
-					PageSize:   1000,
-					PageNumber: 1,
+					PageSize:   pageSize,
+					PageNumber: pageNum,
 				},
 				Database: state.Database.ValueString(),
 			})
