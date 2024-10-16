@@ -191,18 +191,18 @@ type IntegrationInfo struct {
 
 // database
 type Database struct {
-	Name         string `json:"name,omitempty"`
-	Owner        string `json:"owner,omitempty"`
-	Comments     string `json:"comments,omitempty"`
-	Type         string `json:"type,omitempty"`
-	Hint         string `json:"hint,omitempty"`
-	Oid          *int   `json:"oid,omitempty"`
-	Collate      string `json:"collate,omitempty"`
-	Size         *int   `json:"size,omitempty"`
-	PrettySize   string `json:"prettySize,omitempty"`
-	CreateSchema *bool  `json:"createSchema,omitempty"`
-	UID          string `json:"uid,omitempty"`
-	Ctype        string `json:"ctype,omitempty"`
+	Name         *string `json:"name,omitempty"`
+	Owner        *string `json:"owner,omitempty"`
+	Comments     *string `json:"comments,omitempty"`
+	Type         *string `json:"type,omitempty"`
+	Hint         *string `json:"hint,omitempty"`
+	Oid          *int    `json:"oid,omitempty"`
+	Collate      *string `json:"collate,omitempty"`
+	Size         *int    `json:"size,omitempty"`
+	PrettySize   *string `json:"prettySize,omitempty"`
+	CreateSchema *bool   `json:"createSchema,omitempty"`
+	UID          *string `json:"uid,omitempty"`
+	Ctype        *string `json:"ctype,omitempty"`
 }
 
 type PageQuery struct {
@@ -211,12 +211,12 @@ type PageQuery struct {
 }
 
 type Schema struct {
-	Database   string            `json:"database,omitempty"`
-	Catalog    string            `json:"catalog,omitempty"`
-	Name       string            `json:"name,omitempty"`
-	Properties map[string]string `json:"properties,omitempty"`
+	Database   *string            `json:"database,omitempty"`
+	Catalog    *string            `json:"catalog,omitempty"`
+	Name       *string            `json:"name,omitempty"`
+	Properties map[*string]string `json:"properties,omitempty"`
 
-	TableFormat string `json:"tableFormat,omitempty"`
+	TableFormat *string `json:"tableFormat,omitempty"`
 }
 
 //type SchemaProperties struct {
@@ -227,21 +227,16 @@ type Schema struct {
 //}
 
 type SchemaMeta struct {
-	Name     string `json:"name,omitempty"`
-	Owner    string `json:"owner,omitempty"`
-	Comments string `json:"comments,omitempty"`
-	Type     string `json:"type,omitempty"`
-	//Hint         interface{}    `json:"hint,omitempty"`
-	Oid          *int   `json:"oid,omitempty"`
-	Database     string `json:"database,omitempty"`
-	Catalog      string `json:"catalog,omitempty"`
-	HasPrivilege bool   `json:"hasPrivilege,omitempty"`
-	External     bool   `json:"external,omitempty"`
-	//Elements     []string       `json:"elements,omitempty"`
-	//Children SchemaChildren `json:"children,omitempty"`
-	//Options string `json:"options,omitempty"`
-	UID string `json:"uid,omitempty"`
-	//UserPrivilegeInfo []UserPrivilegeInfo `json:"userPrivilegeInfo,omitempty"`
+	Name         *string `json:"name,omitempty"`
+	Owner        *string `json:"owner,omitempty"`
+	Comments     *string `json:"comments,omitempty"`
+	Type         *string `json:"type,omitempty"`
+	Oid          *int    `json:"oid,omitempty"`
+	Database     *string `json:"database,omitempty"`
+	Catalog      *string `json:"catalog,omitempty"`
+	HasPrivilege *bool   `json:"hasPrivilege,omitempty"`
+	External     *bool   `json:"external,omitempty"`
+	UID          *string `json:"uid,omitempty"`
 }
 
 //type SchemaChildren struct {
@@ -251,5 +246,5 @@ type SchemaMeta struct {
 
 type SchemaPageQuery struct {
 	PageQuery
-	Database string `json:"database,omitempty"`
+	Database *string `json:"database,omitempty"`
 }

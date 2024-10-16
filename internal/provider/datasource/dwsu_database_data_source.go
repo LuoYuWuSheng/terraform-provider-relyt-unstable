@@ -63,7 +63,7 @@ func (d *DwsuDatabaseDetailDataSource) Read(ctx context.Context, req datasource.
 	//	"owner": types.StringType,
 	//}}
 	if database != nil {
-		tfDatabase.Owner = types.StringValue(database.Owner)
+		tfDatabase.Owner = types.StringPointerValue(database.Owner)
 	} else {
 		resp.Diagnostics.AddError("Database Not Found", "please check whether it exist!")
 		return

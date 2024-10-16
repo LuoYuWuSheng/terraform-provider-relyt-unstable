@@ -53,9 +53,9 @@ func (d *DwsuSchemaDetailDataSource) Read(ctx context.Context, req datasource.Re
 
 	schemaMeta, err := common.CommonRetry(ctx, func() (*client.SchemaMeta, error) {
 		return dbClient.GetExternalSchema(ctx, client.Schema{
-			Database: tfSchema.Database.ValueString(),
-			Catalog:  tfSchema.Catalog.ValueString(),
-			Name:     tfSchema.Name.ValueString(),
+			Database: tfSchema.Database.ValueStringPointer(),
+			Catalog:  tfSchema.Catalog.ValueStringPointer(),
+			Name:     tfSchema.Name.ValueStringPointer(),
 		})
 	})
 	if err != nil {
@@ -71,8 +71,8 @@ func (d *DwsuSchemaDetailDataSource) Read(ctx context.Context, req datasource.Re
 	//	"owner": types.StringType,
 	//}}
 	if schemaMeta != nil {
-		tfSchema.Owner = types.StringValue(schemaMeta.Owner)
-		tfSchema.External = types.BoolValue(schemaMeta.External)
+		tfSchema.Owner = types.StringPointerValue(schemaMeta.Owner)
+		tfSchema.External = types.BoolPointerValue(schemaMeta.External)
 	} else {
 		resp.Diagnostics.AddError("Schema Not Found", "please check whether it exist!")
 		return

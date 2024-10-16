@@ -80,8 +80,8 @@ func (d *DwsuDatabasesDataSource) Read(ctx context.Context, req datasource.ReadR
 		var tfRecords []model.DwsuDatabaseMeta
 		for _, innerRecord := range records {
 			tfRecords = append(tfRecords, model.DwsuDatabaseMeta{
-				Name:  types.StringValue(innerRecord.Name),
-				Owner: types.StringValue(innerRecord.Owner),
+				Name:  types.StringPointerValue(innerRecord.Name),
+				Owner: types.StringPointerValue(innerRecord.Owner),
 			})
 		}
 		from, diagnostics := types.ListValueFrom(ctx, elementType, tfRecords)

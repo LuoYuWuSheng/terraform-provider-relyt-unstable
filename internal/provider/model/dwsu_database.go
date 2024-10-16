@@ -16,11 +16,11 @@ type DataAccessConfig struct {
 //}
 
 type DwsuExternalSchema struct {
-	Name        types.String      `tfsdk:"name"`
-	Database    types.String      `tfsdk:"database"`
-	Catalog     types.String      `tfsdk:"catalog"`
-	TableFormat types.String      `tfsdk:"table_format"`
-	Properties  map[string]string `tfsdk:"properties"`
+	Name        types.String       `tfsdk:"name"`
+	Database    types.String       `tfsdk:"database"`
+	Catalog     types.String       `tfsdk:"catalog"`
+	TableFormat types.String       `tfsdk:"table_format"`
+	Properties  map[*string]string `tfsdk:"properties"`
 	//Properties   ExternalSchemaProperties `tfsdk:"properties"`
 }
 

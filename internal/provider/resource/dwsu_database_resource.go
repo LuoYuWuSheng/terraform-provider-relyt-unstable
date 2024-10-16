@@ -58,14 +58,14 @@ func (r *DwsuDatabaseResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 	createDatabase, err := dbClient.CreateDatabase(ctx, client.Database{
-		Name: database.Name.ValueString(),
+		Name: database.Name.ValueStringPointer(),
 	})
 	//todo 这里幂等怎么做？创建一个已经存在的database是报失败还是报成功？
 	if err != nil || createDatabase == nil {
 		resp.Diagnostics.AddError("Failed to create database", " Error info: "+err.Error())
 		return
 	}
-	database.Owner = types.StringValue(createDatabase.Owner)
+	database.Owner = types.StringPointerValue(createDatabase.Owner)
 	resp.State.Set(ctx, database)
 }
 
@@ -90,7 +90,7 @@ func (r *DwsuDatabaseResource) Read(ctx context.Context, req resource.ReadReques
 		resp.Diagnostics.AddError("Failed read database", "error read database "+msg)
 		return
 	}
-	database.Owner = types.StringValue(getDatabase.Owner)
+	database.Owner = types.StringPointerValue(getDatabase.Owner)
 	resp.State.Set(ctx, &database)
 }
 
