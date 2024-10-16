@@ -10,7 +10,7 @@ import (
 
 func init() {
 	relytDatabaseClientConfig := RelytDatabaseClientConfig{
-		DmsHost:   "http://127.0.0.1:8180",
+		DmsHost:   "http://pl-4679805844736-api-d3410a34c78f4386.elb.us-east-1.amazonaws.com:8180",
 		AccessKey: "AK8DoEFMRPWBGG0eY1JyNBVj7OnrTO3B6t3uJFyibDcGwz56HrAlg8uKtxf9hQeoHphJzOw",
 		SecretKey: "HHJU4NBSLKZVGKTGRM41FCLGZVH4VPWS",
 	}
@@ -56,7 +56,7 @@ func TestRelytDatabaseClient_dropDatabase(t *testing.T) {
 }
 
 func TestRelytDatabaseClient_listAllDatabase(t *testing.T) {
-	listDatabase, err := databaseClient.ListDatabase(ctx, 100, 1)
+	listDatabase, err := databaseClient.ListDatabase(ctx, 10, 1)
 	if err != nil {
 		fmt.Println("err  " + err.Error())
 		return
@@ -129,6 +129,22 @@ func TestListSchema(t *testing.T) {
 }
 
 func TestRelytDatabaseClient_testNil(t *testing.T) {
+
+	schemaMeta := SchemaMeta{
+		Name:     "",
+		Owner:    "",
+		Comments: "",
+		Type:     "",
+		Oid:      nil,
+		Database: "",
+		Catalog:  "",
+		UID:      "",
+	}
+	marshal, _ := json.Marshal(schemaMeta)
+	fmt.Println(string(marshal))
+	json.Unmarshal([]byte("{name:\"\"}"), &schemaMeta)
+	fmt.Println("name====" + schemaMeta.Name)
+
 	//json := "{}"
 	type Inner struct {
 		boo bool `json:"boo,omitempty"`
