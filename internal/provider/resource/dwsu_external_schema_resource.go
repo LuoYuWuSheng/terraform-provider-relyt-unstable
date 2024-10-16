@@ -68,11 +68,11 @@ func (r *DwsuExternalSchemaResource) Create(ctx context.Context, req resource.Cr
 	}
 	//properties := map[string]string{}
 	dbSchema := client.Schema{
-		Database:    externalSchema.Database.ValueString(),
-		Catalog:     externalSchema.Catalog.ValueString(),
-		Name:        externalSchema.Name.ValueString(),
+		Database:    externalSchema.Database.ValueStringPointer(),
+		Catalog:     externalSchema.Catalog.ValueStringPointer(),
+		Name:        externalSchema.Name.ValueStringPointer(),
 		Properties:  externalSchema.Properties,
-		TableFormat: externalSchema.TableFormat.ValueString(),
+		TableFormat: externalSchema.TableFormat.ValueStringPointer(),
 	}
 	_, err := dbClient.CreateExternalSchema(ctx, dbSchema)
 	if err != nil {
@@ -92,11 +92,11 @@ func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 	dbSchema := client.Schema{
-		Database:    externalSchema.Database.ValueString(),
-		Catalog:     externalSchema.Catalog.ValueString(),
-		Name:        externalSchema.Name.ValueString(),
+		Database:    externalSchema.Database.ValueStringPointer(),
+		Catalog:     externalSchema.Catalog.ValueStringPointer(),
+		Name:        externalSchema.Name.ValueStringPointer(),
 		Properties:  externalSchema.Properties,
-		TableFormat: externalSchema.TableFormat.ValueString(),
+		TableFormat: externalSchema.TableFormat.ValueStringPointer(),
 	}
 	getExternalSchema, err := common.CommonRetry(ctx, func() (*client.SchemaMeta, error) {
 		return dbClient.GetExternalSchema(ctx, dbSchema)
@@ -131,11 +131,11 @@ func (r *DwsuExternalSchemaResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 	dbSchema := client.Schema{
-		Database:    externalSchema.Database.ValueString(),
-		Catalog:     externalSchema.Catalog.ValueString(),
-		Name:        externalSchema.Name.ValueString(),
+		Database:    externalSchema.Database.ValueStringPointer(),
+		Catalog:     externalSchema.Catalog.ValueStringPointer(),
+		Name:        externalSchema.Name.ValueStringPointer(),
 		Properties:  externalSchema.Properties,
-		TableFormat: externalSchema.TableFormat.ValueString(),
+		TableFormat: externalSchema.TableFormat.ValueStringPointer(),
 	}
 
 	getExternalSchema, err := common.CommonRetry(ctx, func() (*client.SchemaMeta, error) {

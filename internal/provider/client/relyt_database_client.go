@@ -34,7 +34,7 @@ func (r *RelytDatabaseClient) DropDatabase(ctx context.Context, name string) (bo
 	resp := CommonRelytResponse[bool]{}
 
 	err := signedHttpRequestWithHeader(nil, ctx, r.DmsHost, "/api/catalog/database/drop",
-		"POST", &resp, &Database{Name: name}, nil, nil, &r.RelytDatabaseClientConfig,
+		"POST", &resp, &Database{Name: &name}, nil, nil, &r.RelytDatabaseClientConfig,
 		nil)
 	if err != nil {
 		return false, err
@@ -57,7 +57,7 @@ func (r *RelytDatabaseClient) ListDatabase(ctx context.Context, pageSize, pageNu
 func (r *RelytDatabaseClient) GetDatabase(ctx context.Context, name string) (*Database, error) {
 	resp := CommonRelytResponse[Database]{}
 	err := signedHttpRequestWithHeader(nil, ctx, r.DmsHost, "/api/catalog/database/detail",
-		"POST", &resp, Database{Name: name}, nil, nil, &r.RelytDatabaseClientConfig,
+		"POST", &resp, Database{Name: &name}, nil, nil, &r.RelytDatabaseClientConfig,
 		nil)
 	if err != nil {
 		return nil, err

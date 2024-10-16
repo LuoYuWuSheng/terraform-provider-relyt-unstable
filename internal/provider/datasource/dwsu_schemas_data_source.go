@@ -81,7 +81,7 @@ func (d *DwsuSchemasDataSource) Read(ctx context.Context, req datasource.ReadReq
 					PageSize:   pageSize,
 					PageNumber: pageNum,
 				},
-				Database: state.Database.ValueString(),
+				Database: state.Database.ValueStringPointer(),
 			})
 			return schemas, err
 		})
@@ -108,11 +108,11 @@ func (d *DwsuSchemasDataSource) Read(ctx context.Context, req datasource.ReadReq
 		var tfRecords []model.DwsuSchemaMeta
 		for _, record := range records {
 			tfRecords = append(tfRecords, model.DwsuSchemaMeta{
-				Database: types.StringValue(record.Database),
-				Catalog:  types.StringValue(record.Catalog),
-				Name:     types.StringValue(record.Name),
-				Owner:    types.StringValue(record.Owner),
-				External: types.BoolValue(record.External),
+				Database: types.StringPointerValue(record.Database),
+				Catalog:  types.StringPointerValue(record.Catalog),
+				Name:     types.StringPointerValue(record.Name),
+				Owner:    types.StringPointerValue(record.Owner),
+				External: types.BoolPointerValue(record.External),
 			})
 		}
 		from, diagnostics := types.ListValueFrom(ctx, elementType, tfRecords)
