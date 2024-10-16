@@ -210,7 +210,7 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 	}
 	if !data.ClientTimeout.IsNull() {
 		tflog.Info(ctx, "client timeout isn't null! set value:"+strconv.FormatInt(data.ClientTimeout.ValueInt64(), 10))
-		if data.ResourceCheckInterval.ValueInt64() <= 1 || data.ResourceCheckInterval.ValueInt64() >= math.MaxInt32 {
+		if data.ClientTimeout.ValueInt64() <= 1 || data.ClientTimeout.ValueInt64() >= math.MaxInt32 {
 			resp.Diagnostics.AddAttributeError(path.Root("client_timeout"), "invalid value", "should be grater than 1")
 		}
 		clientTimeout = int32(data.ClientTimeout.ValueInt64())
