@@ -141,7 +141,7 @@ func ScrollPageRecords[T any](diag *diag.Diagnostics, list func(pageSize, pageNu
 		}
 		now := 0
 		if databases != nil && len(databases) > 0 {
-			records = append(databases)
+			records = append(records, databases...)
 			now = len(databases)
 		}
 		pageNum++

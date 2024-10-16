@@ -241,6 +241,16 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 			SecretKey:     data.DataAccessConfig.SecretKey.ValueString(),
 			ClientTimeout: 10,
 		}
+		if clientConfig.RelytDatabaseClientConfig.AccessKey == "" {
+			resp.Diagnostics.AddError("data_access_config error", "access_key can't be empty string")
+		}
+		if clientConfig.RelytDatabaseClientConfig.SecretKey == "" {
+			resp.Diagnostics.AddError("data_access_config error", "secret_key can't be empty string")
+		}
+		if clientConfig.RelytDatabaseClientConfig.DmsHost == "" {
+			resp.Diagnostics.AddError("data_access_config error", "endpoint can't be empty string")
+		}
+
 		if !data.DataAccessConfig.ClientTimeout.IsNull() {
 			dataAccessClientTimeOut := data.DataAccessConfig.ClientTimeout.ValueInt32()
 			if dataAccessClientTimeOut <= 0 {
@@ -248,6 +258,9 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 				return
 			}
 			clientConfig.RelytDatabaseClientConfig.ClientTimeout = dataAccessClientTimeOut
+		}
+		if resp.Diagnostics.HasError() {
+			return
 		}
 	}
 	relytClient, err := client.NewRelytClient(clientConfig)
