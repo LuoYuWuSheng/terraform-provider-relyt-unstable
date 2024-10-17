@@ -214,7 +214,7 @@ type Schema struct {
 	Database   *string            `json:"database,omitempty"`
 	Catalog    *string            `json:"catalog,omitempty"`
 	Name       *string            `json:"name,omitempty"`
-	Properties map[*string]string `json:"properties,omitempty"`
+	Properties map[string]*string `json:"properties,omitempty"`
 
 	TableFormat *string `json:"tableFormat,omitempty"`
 }

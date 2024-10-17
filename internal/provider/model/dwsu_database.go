@@ -20,7 +20,7 @@ type DwsuExternalSchema struct {
 	Database    types.String       `tfsdk:"database"`
 	Catalog     types.String       `tfsdk:"catalog"`
 	TableFormat types.String       `tfsdk:"table_format"`
-	Properties  map[*string]string `tfsdk:"properties"`
+	Properties  map[string]*string `tfsdk:"properties"`
 	//Properties   ExternalSchemaProperties `tfsdk:"properties"`
 }
 
