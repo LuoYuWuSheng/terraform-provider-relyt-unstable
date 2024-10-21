@@ -32,11 +32,11 @@ func (d *DwsuSchemaDetailDataSource) Metadata(ctx context.Context, req datasourc
 func (d *DwsuSchemaDetailDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"database": schema.StringAttribute{Required: true, Description: "The name of the database."},
-			"catalog":  schema.StringAttribute{Required: true, Description: "The name of the database."},
+			"database": schema.StringAttribute{Required: true, Description: "The database of the schema."},
+			"catalog":  schema.StringAttribute{Required: true, Description: "The catalog of the schema."},
 			"name":     schema.StringAttribute{Required: true, Description: "The name of the schema."},
-			"owner":    schema.StringAttribute{Computed: true, Description: "The owner of the schema."},
-			"external": schema.BoolAttribute{Computed: true, Description: "Is external schema."},
+			"owner":    schema.StringAttribute{Computed: true, Description: "The owner of schema."},
+			"external": schema.BoolAttribute{Computed: true, Description: "Whether the schema is an external schema. true indicates yes; false indicates no."},
 		},
 	}
 }

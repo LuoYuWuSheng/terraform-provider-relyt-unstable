@@ -32,8 +32,10 @@ resource "relyt_dwsu_external_schema" "ex_schema" {
 
 ### Required
 
-- `catalog` (String) The Name of the catalog.
-- `database` (String) The Name of the database.
-- `name` (String) The Name of the schema.
+- `catalog` (String) The name of the catalog.
+Note that the combined length of the catalog and schema values must not exceed 127 characters.
+- `database` (String) The name of the database.
+- `name` (String) The name of the external schema. The schema name must be consistent with the name of the target schema that exists in the external catalog.
+Note that the combined length of the catalog and schema values must not exceed 127 characters.
 - `properties` (Map of String) The properties of the schema.
 - `table_format` (String) table_format

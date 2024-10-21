@@ -23,7 +23,7 @@ data "relyt_dwsu_schemas" "schemas" {
 
 ### Required
 
-- `database` (String) The database name of the schema.
+- `database` (String) The name of the database.
 
 ### Read-Only
 
@@ -34,8 +34,8 @@ data "relyt_dwsu_schemas" "schemas" {
 
 Read-Only:
 
-- `catalog` (String) The name of catalog
-- `database` (String) The name of database
-- `external` (Boolean) External schema
-- `name` (String) The name of schema
-- `owner` (String) The owner of schema
+- `catalog` (String) The catalog of the schema. null is returned if the schema is not an external schema.
+- `database` (String) The database of the schema.
+- `external` (Boolean) Whether the schema is an external schema. true indicates yes; false indicates no.
+- `name` (String) The name of the schema.
+- `owner` (String) The owner of schema.

@@ -31,7 +31,12 @@ provider "relyt" {
 provider "relyt" {
   alias    = "database"
   auth_key = "9a3727e5b9c0mockaGbll2HVLVKLLY1AyjOilAqeyPOBAb74A7VlMOCKTi0bJWJd3"
-
+  role     = "SYSTEMADMIN"
+  data_access_config = {
+    access_key = "<access_key>"
+    secret_key = "<secret_key>"
+    endpoint   = "http://<dns_name>:8180"
+  }
 }
 ```
 
@@ -56,10 +61,10 @@ provider "relyt" {
 
 Required:
 
-- `access_key` (String) access Key
-- `endpoint` (String) data access endpoint
-- `secret_key` (String) secret Key
+- `access_key` (String) The access key for Open API operations.
+- `endpoint` (String) The VPC endpoint for the private link, which must be in the http://<dns_name>:8180 format. Replace <dns_name> with the DNS name of the VPC endpoint you have obtained from Amazon VPC.
+- `secret_key` (String) The secret key for Open API operations.
 
 Optional:
 
-- `client_timeout` (Number) client timeout seconds!
+- `client_timeout` (Number) The data access client timeout seconds!
