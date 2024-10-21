@@ -239,7 +239,7 @@ func (p *RelytProvider) Configure(ctx context.Context, req provider.ConfigureReq
 			DmsHost:       data.DataAccessConfig.Endpoint.ValueString(),
 			AccessKey:     data.DataAccessConfig.AccessKey.ValueString(),
 			SecretKey:     data.DataAccessConfig.SecretKey.ValueString(),
-			ClientTimeout: 10,
+			ClientTimeout: 60,
 		}
 		if clientConfig.RelytDatabaseClientConfig.AccessKey == "" {
 			resp.Diagnostics.AddError("data_access_config error", "access_key can't be empty string")
