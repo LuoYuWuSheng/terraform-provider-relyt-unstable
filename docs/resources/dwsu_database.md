@@ -23,7 +23,7 @@ resource "relyt_dwsu_database" "database" {
 
 ### Required
 
-- `name` (String) The Name of the database. The name contains a maximum of 127 characters
+- `name` (String) The name of the database. The database name must not exceed 127 characters.
 
 ### Read-Only
 

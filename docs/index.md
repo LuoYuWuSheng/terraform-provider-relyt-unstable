@@ -56,10 +56,10 @@ provider "relyt" {
 
 Required:
 
-- `access_key` (String) access Key
-- `endpoint` (String) data access endpoint
-- `secret_key` (String) secret Key
+- `access_key` (String) The access key for Open API operations.
+- `endpoint` (String) The DNS name of the VPC endpoint for the private link. Usually the schema is protocol:[//host[:port]].eg: http://your-host:8180
+- `secret_key` (String) The secret key for Open API operations.
 
 Optional:
 
-- `client_timeout` (Number) client timeout seconds!
+- `client_timeout` (Number) data access client timeout seconds!

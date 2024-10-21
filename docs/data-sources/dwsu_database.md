@@ -23,8 +23,8 @@ data "relyt_dwsu_database" "database" {
 
 ### Required
 
-- `name` (String) The name of database
+- `name` (String) The name of the database, which uniquely identifies the database in the DW service unit.
 
 ### Read-Only
 
-- `owner` (String) The owner of database
+- `owner` (String) The owner of the database.

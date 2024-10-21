@@ -38,9 +38,9 @@ func (r *DwsuExternalSchemaResource) Schema(_ context.Context, _ resource.Schema
 	resp.Schema = schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"name":         schema.StringAttribute{Required: true, Description: "The Name of the schema."},
-			"catalog":      schema.StringAttribute{Required: true, Description: "The Name of the catalog."},
-			"database":     schema.StringAttribute{Required: true, Description: "The Name of the database."},
+			"name":         schema.StringAttribute{Required: true, Description: "The name of the external schema. The schema name must be consistent with the name of the target schema that exists in the external catalog.\nNote that the combined length of the catalog and schema values must not exceed 127 characters."},
+			"catalog":      schema.StringAttribute{Required: true, Description: "The name of the catalog.\nNote that the combined length of the catalog and schema values must not exceed 127 characters."},
+			"database":     schema.StringAttribute{Required: true, Description: "The name of the database."},
 			"table_format": schema.StringAttribute{Required: true, Description: "table_format"},
 			"properties": schema.MapAttribute{
 				ElementType: types.StringType,

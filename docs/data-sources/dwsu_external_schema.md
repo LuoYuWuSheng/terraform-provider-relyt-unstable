@@ -25,11 +25,11 @@ data "relyt_dwsu_external_schema" "schema" {
 
 ### Required
 
-- `catalog` (String) The name of the database.
-- `database` (String) The name of the database.
+- `catalog` (String) The catalog of the schema.
+- `database` (String) The database of the schema.
 - `name` (String) The name of the schema.
 
 ### Read-Only
 
-- `external` (Boolean) Is external schema.
-- `owner` (String) The owner of the schema.
+- `external` (Boolean) Whether the schema is an external schema. true indicates yes; false indicates no.
+- `owner` (String) The owner of schema.

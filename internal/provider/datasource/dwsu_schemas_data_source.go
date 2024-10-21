@@ -33,15 +33,15 @@ func (d *DwsuSchemasDataSource) Metadata(ctx context.Context, req datasource.Met
 func (d *DwsuSchemasDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"database": schema.StringAttribute{Required: true, Description: "The database name of the schema."},
+			"database": schema.StringAttribute{Required: true, Description: "The name of the database."},
 			"schemas": schema.ListNestedAttribute{Computed: true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"name":     schema.StringAttribute{Computed: true, Description: "The name of schema"},
-						"catalog":  schema.StringAttribute{Computed: true, Description: "The name of catalog"},
-						"database": schema.StringAttribute{Computed: true, Description: "The name of database"},
-						"owner":    schema.StringAttribute{Computed: true, Description: "The owner of schema"},
-						"external": schema.BoolAttribute{Computed: true, Description: "External schema"},
+						"name":     schema.StringAttribute{Computed: true, Description: "The name of the schema."},
+						"catalog":  schema.StringAttribute{Computed: true, Description: "The catalog of the schema. null is returned if the schema is not an external schema."},
+						"database": schema.StringAttribute{Computed: true, Description: "The database of the schema."},
+						"owner":    schema.StringAttribute{Computed: true, Description: "The owner of schema."},
+						"external": schema.BoolAttribute{Computed: true, Description: "Whether the schema is an external schema. true indicates yes; false indicates no."},
 					},
 				}, Description: "The list of schema."},
 		},
