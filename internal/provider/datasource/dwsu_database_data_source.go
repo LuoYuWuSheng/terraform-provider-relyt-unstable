@@ -32,8 +32,8 @@ func (d *DwsuDatabaseDetailDataSource) Metadata(ctx context.Context, req datasou
 func (d *DwsuDatabaseDetailDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"name":  schema.StringAttribute{Required: true, Description: "The name of database"},
-			"owner": schema.StringAttribute{Computed: true, Description: "The owner of database"},
+			"name":  schema.StringAttribute{Required: true, Description: "The name of the database, which uniquely identifies the database in the DW service unit."},
+			"owner": schema.StringAttribute{Computed: true, Description: "The owner of the database."},
 		},
 	}
 }
