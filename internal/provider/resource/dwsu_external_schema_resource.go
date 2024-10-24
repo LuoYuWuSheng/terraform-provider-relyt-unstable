@@ -2,10 +2,12 @@ package resource
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"strings"
 	"terraform-provider-relyt/internal/provider/client"
 	"terraform-provider-relyt/internal/provider/common"
 	"terraform-provider-relyt/internal/provider/model"
@@ -109,11 +111,14 @@ func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.Read
 		resp.Diagnostics.AddError("Failed to Read schema", "error to Read schema:"+msg)
 		return
 	}
-	resp.State.Set(ctx, externalSchema)
-	//todo 这里没读取？
-	//if getExternalSchema.pro{
-	//
-	//}
+	if getExternalSchema.Properties == nil {
+		externalSchema.Properties = map[string]*string{}
+	} else {
+		externalSchema.Properties = *getExternalSchema.Properties
+	}
+	externalSchema.TableFormat = types.StringPointerValue(getExternalSchema.TableFormat)
+
+	resp.State.Set(ctx, &externalSchema)
 }
 
 // Update updates the resource and sets the updated Terraform state on success.
@@ -165,5 +170,22 @@ func (r *DwsuExternalSchemaResource) Delete(ctx context.Context, req resource.De
 
 func (r *DwsuExternalSchemaResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Retrieve import ID and save to id attribute
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	//resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+
+	// Retrieve import ID and save to id attribute
+	idParts := strings.Split(req.ID, ",")
+	if len(idParts) != 3 {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: database,catalog,name. Got: %q", req.ID),
+		)
+		return
+	}
+	database := idParts[0]
+	catalog := idParts[1]
+	name := idParts[2]
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("database"), database)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("catalog"), catalog)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), name)...)
 }
