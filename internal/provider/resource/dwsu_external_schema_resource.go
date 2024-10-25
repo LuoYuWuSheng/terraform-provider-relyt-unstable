@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -174,16 +175,39 @@ func (r *DwsuExternalSchemaResource) ImportState(ctx context.Context, req resour
 
 	// Retrieve import ID and save to id attribute
 	idParts := strings.Split(req.ID, ",")
-	if len(idParts) != 3 {
+	if !(len(idParts) == 3 || len(idParts) == 4) {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: database,catalog,name. Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: database,catalog,name or base64,endcode_database,encode_catalog,encode_name. Got: %q", req.ID),
 		)
 		return
 	}
-	database := idParts[0]
-	catalog := idParts[1]
-	name := idParts[2]
+	if len(idParts) == 4 && "base64" != idParts[0] {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("base64 formate ID must start with base64. Got: %q", req.ID),
+		)
+		return
+	}
+	ids := []string{idParts[0], idParts[1], idParts[2]}
+	if len(idParts) == 4 {
+		//base64解码
+		for i := 0; i < 3; i++ {
+			encodedStr := idParts[i+1]
+			decodedBytes, err := base64.StdEncoding.DecodeString(encodedStr)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Unexpected Import Identifier",
+					fmt.Sprintf("base64 format error: %q", encodedStr),
+				)
+				return
+			}
+			ids[i] = string(decodedBytes)
+		}
+	}
+	database := ids[0]
+	catalog := ids[1]
+	name := ids[2]
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("database"), database)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("catalog"), catalog)...)
