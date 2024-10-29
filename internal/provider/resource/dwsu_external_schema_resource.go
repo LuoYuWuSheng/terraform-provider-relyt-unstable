@@ -7,11 +7,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"strings"
 	"terraform-provider-relyt/internal/provider/client"
 	"terraform-provider-relyt/internal/provider/common"
 	"terraform-provider-relyt/internal/provider/model"
+	"terraform-provider-relyt/internal/provider/resource/modifier"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -44,7 +46,8 @@ func (r *DwsuExternalSchemaResource) Schema(_ context.Context, _ resource.Schema
 			"name":         schema.StringAttribute{Required: true, Description: "The name of the external schema. The schema name must be consistent with the name of the target schema that exists in the external catalog.\nNote that the combined length of the catalog and schema values must not exceed 127 characters."},
 			"catalog":      schema.StringAttribute{Required: true, Description: "The name of the catalog.\nNote that the combined length of the catalog and schema values must not exceed 127 characters."},
 			"database":     schema.StringAttribute{Required: true, Description: "The name of the database."},
-			"table_format": schema.StringAttribute{Required: true, Description: "table_format"},
+			"table_format": schema.StringAttribute{Required: true, Description: "table_format", PlanModifiers: []planmodifier.String{modifier.GetStringIgnoreCaseModifier()}},
+			//"table_format": schema.StringAttribute{Required: true, Description: "table_format"},
 			"properties": schema.MapAttribute{
 				ElementType: types.StringType,
 				Required:    true,
@@ -124,7 +127,7 @@ func (r *DwsuExternalSchemaResource) Read(ctx context.Context, req resource.Read
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *DwsuExternalSchemaResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddWarning("Not Support！", "schema not support update! please rollback your change")
+	resp.Diagnostics.AddError("Not Support！", "schema not support update! please rollback your change")
 }
 
 // Delete deletes the resource and removes the Terraform state on success.

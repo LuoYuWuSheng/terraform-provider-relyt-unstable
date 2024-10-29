@@ -96,7 +96,7 @@ func (r *DwsuDatabaseResource) Read(ctx context.Context, req resource.ReadReques
 
 // Update updates the resource and sets the updated Terraform state on success.
 func (r *DwsuDatabaseResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddWarning("Not Support！", "database not support update! please rollback your change")
+	resp.Diagnostics.AddError("Not Support！", "database not support update! please rollback your change")
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
