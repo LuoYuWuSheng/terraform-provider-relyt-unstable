@@ -47,6 +47,7 @@ func (r *DwsuDatabaseResource) Schema(_ context.Context, _ resource.SchemaReques
 
 // Create a new resource.
 func (r *DwsuDatabaseResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	tflog.Info(ctx, "============create:ak "+r.client.RelytDatabaseClientConfig.AccessKey+" sk:"+r.client.RelytDatabaseClientConfig.SecretKey)
 	database := model.DwsuDatabaseMeta{}
 	diags := req.Plan.Get(ctx, &database)
 	resp.Diagnostics.Append(diags...)
@@ -71,7 +72,7 @@ func (r *DwsuDatabaseResource) Create(ctx context.Context, req resource.CreateRe
 
 // Read resource information.
 func (r *DwsuDatabaseResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Info(ctx, "try read")
+	tflog.Info(ctx, "============read:ak "+r.client.RelytDatabaseClientConfig.AccessKey+" sk:"+r.client.RelytDatabaseClientConfig.SecretKey)
 	dbClient := common.ParseAccessConfig(ctx, r.client, req.ProviderMeta, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
