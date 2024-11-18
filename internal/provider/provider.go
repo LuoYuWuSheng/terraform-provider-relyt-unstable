@@ -302,6 +302,7 @@ func (p *RelytProvider) DataSources(ctx context.Context) []func() datasource.Dat
 		relytDS.NewDwsuDatabaseDetailDataSource,
 		relytDS.NewDwsuSchemasDataSource,
 		relytDS.NewDwsuSchemaDetailDataSource,
+		relytDS.NewDwsuListDataSource,
 	}
 }
 

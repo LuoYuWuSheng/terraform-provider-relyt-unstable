@@ -11,7 +11,7 @@ type RelytProviderModel struct {
 	Role                  types.String      `tfsdk:"role"`
 	ResourceCheckTimeout  types.Int64       `tfsdk:"resource_check_timeout"`
 	ResourceCheckInterval types.Int64       `tfsdk:"resource_check_interval"`
-	ClientTimeout         types.Int64  `tfsdk:"client_timeout"`
+	ClientTimeout         types.Int64       `tfsdk:"client_timeout"`
 	DataAccessConfig      *DataAccessConfig `tfsdk:"data_access_config"`
 }
 type Endpoints struct {
@@ -70,4 +70,8 @@ type DWUserModel struct {
 	AsyncQueryResultLocationAwsRoleArn types.String `tfsdk:"async_query_result_location_aws_role_arn"`
 	//LastUpdated                        types.String `tfsdk:"last_updated"`
 	//Status                             types.String `tfsdk:"status"`
+}
+
+type DwsuListModel struct {
+	DwsuList types.List `tfsdk:"dwsu_list"`
 }
