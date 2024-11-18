@@ -33,19 +33,23 @@ type Dps struct {
 	Status      types.String `tfsdk:"status"`
 }
 
-type DwsuModel struct {
-	ID         types.String `tfsdk:"id"`
-	Alias      types.String `tfsdk:"alias"`
-	Cloud      types.String `tfsdk:"cloud"`
-	Region     types.String `tfsdk:"region"`
-	Variant    types.String `tfsdk:"variant"`
-	Edition    types.String `tfsdk:"edition"`
-	Domain     types.String `tfsdk:"domain"`
-	DefaultDps *Dps         `tfsdk:"default_dps"`
+type PlainDwsuModel struct {
+	ID      types.String `tfsdk:"id"`
+	Alias   types.String `tfsdk:"alias"`
+	Cloud   types.String `tfsdk:"cloud"`
+	Region  types.String `tfsdk:"region"`
+	Variant types.String `tfsdk:"variant"`
+	Edition types.String `tfsdk:"edition"`
+	Domain  types.String `tfsdk:"domain"`
 	//Endpoints  []Endpoints  `tfsdk:"endpoints"`
 	Endpoints types.List `tfsdk:"endpoints"`
 	//LastUpdated types.Int64  `tfsdk:"last_updated"`
 	//Status      types.String `tfsdk:"status"`
+}
+
+type DwsuModel struct {
+	PlainDwsuModel
+	DefaultDps *Dps `tfsdk:"default_dps"`
 }
 
 type DpsModel struct {

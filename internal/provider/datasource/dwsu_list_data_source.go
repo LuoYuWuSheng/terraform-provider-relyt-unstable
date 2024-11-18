@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	types "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"strconv"
 	"terraform-provider-relyt/internal/provider/client"
 	"terraform-provider-relyt/internal/provider/common"
 	"terraform-provider-relyt/internal/provider/model"
@@ -65,7 +67,8 @@ func (d *DwsuListDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 						},
 					},
 				},
-				Computed: true,
+				Description: "The dwsu list",
+				Computed:    true,
 			},
 		},
 	}
@@ -97,14 +100,13 @@ func (d *DwsuListDataSource) Read(ctx context.Context, req datasource.ReadReques
 			"uri":      types.StringType,
 		},
 	}
-	dwsuModelList := []model.DwsuModel{}
+	dwsuModelList := []model.PlainDwsuModel{}
 	if len(relytDwsuList) > 0 {
 		for _, dwsuModel := range relytDwsuList {
-			slice := model.DwsuModel{
-				ID:        types.StringValue(dwsuModel.ID),
-				Alias:     types.StringValue(dwsuModel.Alias),
-				Domain:    types.StringValue(dwsuModel.Domain),
-				Endpoints: types.List{},
+			slice := model.PlainDwsuModel{
+				ID:     types.StringValue(dwsuModel.ID),
+				Alias:  types.StringValue(dwsuModel.Alias),
+				Domain: types.StringValue(dwsuModel.Domain),
 			}
 			if dwsuModel.Region.Cloud != nil {
 				slice.Cloud = types.StringValue(dwsuModel.Region.Cloud.ID)
@@ -140,35 +142,21 @@ func (d *DwsuListDataSource) Read(ctx context.Context, req datasource.ReadReques
 			dwsuModelList = append(dwsuModelList, slice)
 		}
 	}
-	DwsuModelType := types.ListType{
-		ElemType: types.ObjectType{AttrTypes: map[string]attr.Type{
-			"id":      types.StringType,
-			"cloud":   types.StringType,
-			"region":  types.StringType,
-			"domain":  types.StringType,
-			"variant": types.StringType,
-			"edition": types.StringType,
-			"alias":   types.StringType,
-			"endpoints": types.ListType{
-				ElemType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"extensions": types.MapType{ElemType: types.StringType},
-						"host":       types.StringType,
-						"id":         types.StringType,
-						"open":       types.BoolType,
-						"port":       types.Int64Type,
-						"protocol":   types.StringType,
-						"type":       types.StringType,
-						"uri":        types.StringType,
-					},
-				},
-			},
-		}},
-	}
+	DwsuModelType := types.ObjectType{AttrTypes: map[string]attr.Type{
+		"id":        types.StringType,
+		"cloud":     types.StringType,
+		"region":    types.StringType,
+		"domain":    types.StringType,
+		"variant":   types.StringType,
+		"edition":   types.StringType,
+		"alias":     types.StringType,
+		"endpoints": types.ListType{ElemType: endpointsTFType},
+	}}
+	tflog.Info(ctx, "convert list size{}"+strconv.Itoa(len(dwsuModelList)))
 	dwsuList, diagnostics := types.ListValueFrom(ctx, DwsuModelType, dwsuModelList)
 	if diagnostics.HasError() {
 		resp.Diagnostics.Append(diagnostics...)
-		return
+		//return
 	}
 	tfListModel := model.DwsuListModel{DwsuList: dwsuList}
 	resp.State.Set(ctx, &tfListModel)
