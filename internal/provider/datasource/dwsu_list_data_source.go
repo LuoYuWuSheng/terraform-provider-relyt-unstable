@@ -83,6 +83,63 @@ func (d *DwsuListDataSource) Read(ctx context.Context, req datasource.ReadReques
 		//tflog.Error(ctx, "error read dwsu"+err.Error())
 		return
 	}
+	endpointsTFType := types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"extensions": types.MapType{
+				ElemType: types.StringType,
+			},
+			"host":     types.StringType,
+			"id":       types.StringType,
+			"open":     types.BoolType,
+			"port":     types.Int32Type,
+			"protocol": types.StringType,
+			"type":     types.StringType,
+			"uri":      types.StringType,
+		},
+	}
+	dwsuModelList := []model.DwsuModel{}
+	if len(relytDwsuList) > 0 {
+		for _, dwsuModel := range relytDwsuList {
+			slice := model.DwsuModel{
+				ID:        types.StringValue(dwsuModel.ID),
+				Alias:     types.StringValue(dwsuModel.Alias),
+				Domain:    types.StringValue(dwsuModel.Domain),
+				Endpoints: types.List{},
+			}
+			if dwsuModel.Region.Cloud != nil {
+				slice.Cloud = types.StringValue(dwsuModel.Region.Cloud.ID)
+				slice.Region = types.StringValue(dwsuModel.Region.ID)
+			}
+			if dwsuModel.Variant != nil {
+				slice.Variant = types.StringValue(dwsuModel.Variant.ID)
+			}
+			if dwsuModel.Edition != nil {
+				slice.Variant = types.StringValue(dwsuModel.Edition.ID)
+			}
+
+			var tfEndPoints []model.Endpoints
+			for _, endpoint := range dwsuModel.Endpoints {
+				tfEndpoint := model.Endpoints{
+					//Extensions: types.MapValue(types.StringType),
+					Host:     types.StringValue(endpoint.Host),
+					ID:       types.StringValue(endpoint.ID),
+					Open:     types.BoolValue(endpoint.Open),
+					Port:     types.Int32Value(endpoint.Port),
+					Protocol: types.StringValue(endpoint.Protocol),
+					Type:     types.StringValue(endpoint.Type),
+					URI:      types.StringValue(endpoint.URI),
+				}
+				mapValue, diage := types.MapValueFrom(ctx, types.StringType, endpoint.Extensions)
+				resp.Diagnostics.Append(diage...)
+				tfEndpoint.Extensions = mapValue
+				tfEndPoints = append(tfEndPoints, tfEndpoint)
+			}
+			from, d := types.ListValueFrom(ctx, endpointsTFType, tfEndPoints)
+			resp.Diagnostics.Append(d...)
+			slice.Endpoints = from
+			dwsuModelList = append(dwsuModelList, slice)
+		}
+	}
 	DwsuModelType := types.ListType{
 		ElemType: types.ObjectType{AttrTypes: map[string]attr.Type{
 			"id":      types.StringType,
@@ -108,7 +165,7 @@ func (d *DwsuListDataSource) Read(ctx context.Context, req datasource.ReadReques
 			},
 		}},
 	}
-	dwsuList, diagnostics := types.ListValueFrom(ctx, DwsuModelType, relytDwsuList)
+	dwsuList, diagnostics := types.ListValueFrom(ctx, DwsuModelType, dwsuModelList)
 	if diagnostics.HasError() {
 		resp.Diagnostics.Append(diagnostics...)
 		return
