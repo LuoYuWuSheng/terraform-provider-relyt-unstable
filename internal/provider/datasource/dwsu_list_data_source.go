@@ -116,7 +116,7 @@ func (d *DwsuListDataSource) Read(ctx context.Context, req datasource.ReadReques
 				slice.Variant = types.StringValue(dwsuModel.Variant.ID)
 			}
 			if dwsuModel.Edition != nil {
-				slice.Variant = types.StringValue(dwsuModel.Edition.ID)
+				slice.Edition = types.StringValue(dwsuModel.Edition.ID)
 			}
 
 			var tfEndPoints []model.Endpoints
