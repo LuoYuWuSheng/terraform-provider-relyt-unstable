@@ -73,7 +73,7 @@ func (d *CloudRegionEndPointListDataSource) Read(ctx context.Context, req dataso
 	if state.Region.ValueString() == "" {
 		resp.Diagnostics.AddError("parameter error", "region can't be empty")
 	}
-	if diags.HasError() {
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
