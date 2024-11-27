@@ -41,6 +41,6 @@ Read-Only:
 - `id` (String) The ID of the endpoint.
 - `open` (Boolean) Public network access
 - `port` (Number) The port number used by the endpoint.
-- `protocol` (String) The protocol used by the endpoint. enum: {HTTP, HTTPS, JDBC}
-- `type` (String) The type of the endpoint. enum: {openapi, web_console, database}
+- `protocol` (String) The protocol used by the endpoint.
+- `type` (String) The type of the endpoint.
 - `uri` (String) The URI of the endpoint.
