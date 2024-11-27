@@ -67,6 +67,15 @@ func (d *CloudRegionEndPointListDataSource) Read(ctx context.Context, req dataso
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if state.Cloud.ValueString() == "" {
+		resp.Diagnostics.AddError("parameter error", "cloud can't be empty")
+	}
+	if state.Region.ValueString() == "" {
+		resp.Diagnostics.AddError("parameter error", "region can't be empty")
+	}
+	if diags.HasError() {
+		return
+	}
 
 	regionEndpoints, err := common.CommonRetry(ctx, func() (*[]client.RegionEndpoint, error) {
 		return d.client.GetRegionEndpoints(ctx, state.Cloud.ValueString(), state.Region.ValueString())
