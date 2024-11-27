@@ -123,17 +123,17 @@ func (d *DwsuListDataSource) Read(ctx context.Context, req datasource.ReadReques
 			for _, endpoint := range dwsuModel.Endpoints {
 				tfEndpoint := model.Endpoints{
 					//Extensions: types.MapValue(types.StringType),
-					Host:     types.StringValue(endpoint.Host),
-					ID:       types.StringValue(endpoint.ID),
-					Open:     types.BoolValue(endpoint.Open),
-					Port:     types.Int32Value(endpoint.Port),
-					Protocol: types.StringValue(endpoint.Protocol),
-					Type:     types.StringValue(endpoint.Type),
-					URI:      types.StringValue(endpoint.URI),
+					Host:       types.StringValue(endpoint.Host),
+					ID:         types.StringValue(endpoint.ID),
+					Open:       types.BoolValue(endpoint.Open),
+					Port:       types.Int32Value(endpoint.Port),
+					Protocol:   types.StringValue(endpoint.Protocol),
+					Type:       types.StringValue(endpoint.Type),
+					URI:        types.StringValue(endpoint.URI),
+					Extensions: types.MapNull(types.StringType),
 				}
-				mapValue, diage := types.MapValueFrom(ctx, types.StringType, endpoint.Extensions)
-				resp.Diagnostics.Append(diage...)
-				tfEndpoint.Extensions = mapValue
+				//mapValue, diage := types.MapValueFrom(ctx, types.StringType, endpoint.Extensions)
+				//resp.Diagnostics.Append(diage...)
 				tfEndPoints = append(tfEndPoints, tfEndpoint)
 			}
 			from, d := types.ListValueFrom(ctx, endpointsTFType, tfEndPoints)

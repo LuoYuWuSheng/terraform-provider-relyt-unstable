@@ -79,3 +79,9 @@ type DWUserModel struct {
 type DwsuListModel struct {
 	DwsuList types.List `tfsdk:"dwsu_list"`
 }
+
+type CloudRegionEndpoints struct {
+	Cloud     types.String `tfsdk:"cloud"`
+	Region    types.String `tfsdk:"region"`
+	Endpoints types.List   `tfsdk:"endpoints"`
+}
