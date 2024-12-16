@@ -398,3 +398,18 @@ func TestMap(t *testing.T) {
 	}
 	fmt.Println(um["abc"])
 }
+
+func TestRelytClient_GetUserSecurityPolicy(t *testing.T) {
+	dwsuId := "1111"
+	resp, err := client.GetDwsuOpenApiMeta(ctx, dwsuId)
+	if err != nil {
+		fmt.Println("err" + err.Error())
+		return
+	}
+	policy, err := client.GetUserSecurityPolicy(ctx, resp.URI, dwsuId)
+	if err != nil {
+		return
+	}
+	marshal, err := json.Marshal(policy)
+	fmt.Println(string(marshal))
+}

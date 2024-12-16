@@ -388,3 +388,25 @@ func (p *RelytClient) GetRegionEndpoints(ctx context.Context, cloud, region stri
 	}
 	return resp.Data, nil
 }
+
+func (p *RelytClient) GetUserSecurityPolicy(ctx context.Context, regionUri, dwsuId string) (*UserSecurityPolicy, error) {
+	path := fmt.Sprintf("/dwsu/%s/user-security-policy", url.PathEscape(dwsuId))
+	resp := CommonRelytResponse[UserSecurityPolicy]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "GET", &resp, nil, nil, nil)
+	if err != nil {
+		tflog.Error(ctx, "Error get user-security-policy:"+err.Error())
+		return nil, err
+	}
+	return resp.Data, nil
+}
+
+func (p *RelytClient) PatchUserSecurityPolicy(ctx context.Context, regionUri, dwsuId string, userSecPolicy UserSecurityPolicy) (*string, error) {
+	path := fmt.Sprintf("/dwsu/%s/user-security-policy", url.PathEscape(dwsuId))
+	resp := CommonRelytResponse[string]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "PATCH", &resp, userSecPolicy, nil, nil)
+	if err != nil {
+		tflog.Error(ctx, "Error get user-security-policy:"+err.Error())
+		return nil, err
+	}
+	return resp.Data, nil
+}
