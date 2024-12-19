@@ -26,8 +26,8 @@ type Boto3AccessInfo struct {
 }
 
 type DwsuUserSecurityPolicy struct {
-	DwsuId              types.String `tfsdk:"dwsu_id"`
-	MFA                 types.String `tfsdk:"mfa"`
-	MFAProtectionScopes types.Set    `tfsdk:"mfa_protection_scopes"`
-	ResetInitPassword   types.Bool   `tfsdk:"reset_init_password"`
+	DwsuId            types.String `tfsdk:"dwsu_id"`
+	MFA               types.String `tfsdk:"mfa"`
+	ResetInitPassword types.Bool   `tfsdk:"reset_init_password"`
+	//MFAProtectionScopes types.Set    `tfsdk:"mfa_protection_scopes"`
 }

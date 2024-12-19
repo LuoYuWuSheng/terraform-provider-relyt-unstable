@@ -13,13 +13,11 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "relyt_dwuser" "user1" {
-  dwsu_id                                  = "dwsu-id-from-an-dwsu-resource"
-  account_name                             = "UniqueAccountName"
-  account_password                         = "daf#$dgdfe&Abce%64"
-  datalake_aws_lakeformation_role_arn      = "role arn arn=//xxxx"
-  async_query_result_location_prefix       = "s3=//bucket-name/prefix/..."
-  async_query_result_location_aws_role_arn = "role arn arn=//xxxx"
+resource "relyt_dwsu_user_policy" "security_constraints" {
+
+  dwsu_id             = "your_dwsu_id"
+  mfa                 = "OPTIONAL"
+  reset_init_password = false
 }
 ```
 
@@ -33,5 +31,4 @@ resource "relyt_dwuser" "user1" {
 ### Optional
 
 - `mfa` (String) The mfa policy of the dwsu user.
-- `mfa_protection_scopes` (Set of String) The mfa protection scopes.
 - `reset_init_password` (Boolean) The choice whether user need to reset their init password

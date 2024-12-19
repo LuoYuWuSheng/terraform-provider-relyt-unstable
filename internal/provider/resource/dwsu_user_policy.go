@@ -41,10 +41,10 @@ func (r *dwsuUserPolicy) Schema(_ context.Context, _ resource.SchemaRequest, res
 	resp.Schema = schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"dwsu_id":               schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
-			"mfa":                   schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("optional"), Description: "The mfa policy of the dwsu user."},
-			"mfa_protection_scopes": schema.SetAttribute{Optional: true, ElementType: types.StringType, Description: "The mfa protection scopes."},
-			"reset_init_password":   schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false), Description: "The choice whether user need to reset their init password"},
+			"dwsu_id":             schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
+			"mfa":                 schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("optional"), Description: "The mfa policy of the dwsu user."},
+			"reset_init_password": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false), Description: "The choice whether user need to reset their init password"},
+			//"mfa_protection_scopes": schema.SetAttribute{Optional: true, ElementType: types.StringType, Description: "The mfa protection scopes."},
 		},
 	}
 }
@@ -84,12 +84,12 @@ func (r *dwsuUserPolicy) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	securityPolicy.MFA = types.StringValue(clientPolicy.MFAStrategy)
 	securityPolicy.ResetInitPassword = types.BoolValue(clientPolicy.RequiredChangingInitPassword)
-	proctionSet, diagnostics := types.SetValueFrom(ctx, types.StringType, clientPolicy.ExtraMfaProtectionScopes)
-	if diagnostics.HasError() {
-		resp.Diagnostics.Append(diagnostics...)
-		return
-	}
-	securityPolicy.MFAProtectionScopes = proctionSet
+	//proctionSet, diagnostics := types.SetValueFrom(ctx, types.StringType, clientPolicy.ExtraMfaProtectionScopes)
+	//if diagnostics.HasError() {
+	//	resp.Diagnostics.Append(diagnostics...)
+	//	return
+	//}
+	//securityPolicy.MFAProtectionScopes = proctionSet
 	resp.State.Set(ctx, securityPolicy)
 	return
 }
@@ -125,11 +125,11 @@ func (r *dwsuUserPolicy) patchUserSecurityPolicy(ctx context.Context, securityPo
 		RequiredChangingInitPassword: securityPolicy.ResetInitPassword.ValueBool(),
 	}
 
-	diags := types.Set.ElementsAs(securityPolicy.MFAProtectionScopes, ctx, &policy.ExtraMfaProtectionScopes, true)
-	diag.Append(diags...)
-	if diag.HasError() {
-		return
-	}
+	//diags := types.Set.ElementsAs(securityPolicy.MFAProtectionScopes, ctx, &policy.ExtraMfaProtectionScopes, true)
+	//diag.Append(diags...)
+	//if diag.HasError() {
+	//	return
+	//}
 
 	_, err := common.CommonRetry(ctx, func() (*string, error) {
 		return r.client.PatchUserSecurityPolicy(ctx, regionUri, securityPolicy.DwsuId.ValueString(), policy)
