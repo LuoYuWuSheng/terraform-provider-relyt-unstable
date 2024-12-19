@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"terraform-provider-relyt/internal/provider/client"
@@ -41,9 +42,9 @@ func (r *dwsuUserPolicy) Schema(_ context.Context, _ resource.SchemaRequest, res
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
 			"dwsu_id":               schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
-			"mfa":                   schema.StringAttribute{Optional: true, Default: stringdefault.StaticString("optional"), Description: "The mfa policy of the dwsu user."},
+			"mfa":                   schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("optional"), Description: "The mfa policy of the dwsu user."},
 			"mfa_protection_scopes": schema.SetAttribute{Optional: true, ElementType: types.StringType, Description: "The mfa protection scopes."},
-			"reset_init_password":   schema.StringAttribute{Optional: true, Default: stringdefault.StaticString("optional"), Description: "The choice whether user need to reset their init password"},
+			"reset_init_password":   schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false), Description: "The choice whether user need to reset their init password"},
 		},
 	}
 }

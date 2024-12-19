@@ -400,16 +400,24 @@ func TestMap(t *testing.T) {
 }
 
 func TestRelytClient_GetUserSecurityPolicy(t *testing.T) {
-	dwsuId := "1111"
-	resp, err := client.GetDwsuOpenApiMeta(ctx, dwsuId)
-	if err != nil {
-		fmt.Println("err" + err.Error())
-		return
-	}
-	policy, err := client.GetUserSecurityPolicy(ctx, resp.URI, dwsuId)
+	dwsuId := "4682456933120"
+	//resp, err := client.GetDwsuOpenApiMeta(ctx, dwsuId)
+	//if err != nil {
+	//	fmt.Println("err" + err.Error())
+	//	return
+	//}
+	policy, err := client.GetUserSecurityPolicy(ctx, client.RegionApi, dwsuId)
 	if err != nil {
 		return
 	}
 	marshal, err := json.Marshal(policy)
+	fmt.Println(string(marshal))
+
+	suc, err := client.PatchUserSecurityPolicy(ctx, client.RegionApi, dwsuId, UserSecurityPolicy{
+		ExtraMfaProtectionScopes:     []string{"DPS_OPERATIONS"},
+		MFAStrategy:                  "OPTIONAL",
+		RequiredChangingInitPassword: true,
+	})
+	marshal, err = json.Marshal(suc)
 	fmt.Println(string(marshal))
 }
