@@ -42,8 +42,8 @@ func (r *dwsuUserPolicy) Schema(_ context.Context, _ resource.SchemaRequest, res
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
 			"dwsu_id":             schema.StringAttribute{Required: true, Description: "The ID of the service unit."},
-			"mfa":                 schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("optional"), Description: "The mfa policy of the dwsu user."},
-			"reset_init_password": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false), Description: "The choice whether user need to reset their init password"},
+			"mfa":                 schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("OPTIONAL"), Description: "The mfa policy of the dwsu user. Default 'OPTIONAL'"},
+			"reset_init_password": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false), Description: "The choice whether user need to reset their init password. Default 'false'"},
 			//"mfa_protection_scopes": schema.SetAttribute{Optional: true, ElementType: types.StringType, Description: "The mfa protection scopes."},
 		},
 	}

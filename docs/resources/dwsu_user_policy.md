@@ -30,5 +30,5 @@ resource "relyt_dwsu_user_policy" "security_constraints" {
 
 ### Optional
 
-- `mfa` (String) The mfa policy of the dwsu user.
-- `reset_init_password` (Boolean) The choice whether user need to reset their init password
+- `mfa` (String) The mfa policy of the dwsu user. Default 'OPTIONAL'
+- `reset_init_password` (Boolean) The choice whether user need to reset their init password. Default 'false'
