@@ -171,6 +171,17 @@ func (p *RelytClient) CreateAccount(ctx context.Context, regionUri string, dwsuI
 	return &resp, nil
 }
 
+func (p *RelytClient) PatchAccount(ctx context.Context, regionUri string, dwsuId string, userId, passwd string) (*CommonRelytResponse[string], error) {
+	path := fmt.Sprintf("/dwsu/%s/user/%s", dwsuId, url.PathEscape(userId))
+	patchPwd := map[string]any{"initPassword": passwd, "resetMfa": true}
+	resp := CommonRelytResponse[string]{}
+	err := doHttpRequest(p, ctx, regionUri, path, "PATCH", &resp, patchPwd, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
 func (p *RelytClient) GetAccount(ctx context.Context, regionUri string, dwsuId string, userId string) (*CommonRelytResponse[Account], error) {
 	path := fmt.Sprintf("/dwsu/%s/user/%s", dwsuId, url.PathEscape(userId))
 	resp := CommonRelytResponse[Account]{}
